@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
+<Construct xmlns="http://iso-commonlogic.org/xcl2">
+  <Titling>
+    <Name cri="http://example.org/caseD/myText-D1#a"/>
+    <Construct>
+      <Import>
+        <Name cri="http://example.org/caseD/myText-D1#a"/>
+      </Import>
+      <Atom><Name>P</Name><Name>a</Name></Atom>
+    </Construct>
+  </Titling>  
+</Construct>

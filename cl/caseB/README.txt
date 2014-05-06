@@ -1,4 +1,4 @@
-Case A. A simple import.
+Case B. An import into a domain restriction.
 
 The directory /input holds the original corpus, with importations.
 The directory /result holds a logically-equivalent corpus where all importations that are resolvable have been rewritten
