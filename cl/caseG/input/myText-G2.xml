@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
+<Construct xmlns="http://iso-commonlogic.org/xcl2">
+  <Restrict>
+    <Name cri="http://example.org/caseG/myDomain-G1"/>
+    <Import>
+      <Name cri="http://example.org/caseG/myText-G1#a"/>
+    </Import>
+  </Restrict>
+  <Import>
+    <Name cri="http://example.org/caseG/myText-G1#b"/>
+  </Import>
+  <Atom><Name>Q</Name><Name>b</Name></Atom>
+</Construct>
