@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
+<Construct xmlns="http://iso-commonlogic.org/xcl2">
+  <Titling>
+    <Name cri="http://example.org/caseK/myText-K1#b"/>
+    <Construct>
+      <Titling>
+        <Comment>This nested titling only comes into play when its outer titling is imported.
+        </Comment>
+        <Name cri="http://example.org/caseK/myText-K1#c"/>
+        <Construct>
+          <Atom><Name>V</Name><Name>w</Name></Atom>
+        </Construct>
+      </Titling>  
+    </Construct>
+  </Titling>  
+  <Titling>
+    <Name cri="http://example.org/caseK/myText-K1#d"/>
+    <Construct>
+      <Titling>
+        <Comment>This nested titling will not be active in this case, because the outer titling is not imported.
+        </Comment>
+        <Name cri="http://example.org/caseK/myText-K1#c"/>
+        <Construct>
+          <Atom><Name>Y</Name><Name>z</Name></Atom>
+        </Construct>
+      </Titling>  
+    </Construct>
+  </Titling>    
+  <Titling>
+    <Comment>This nested titling only comes into play when its outer titling is imported.
+    </Comment>
+    <Name cri="http://example.org/caseK/myText-K1#c"/>
+    <Construct>
+      <Atom><Name>V</Name><Name>w</Name></Atom>
+    </Construct>
+  </Titling>  
+</Construct>
