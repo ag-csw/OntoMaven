@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
+<Construct xmlns="http://iso-commonlogic.org/xcl2">
+  <Titling>
+    <Name cri="http://example.org/caseH/myText-H1#a"/>
+    <Construct>
+      <Atom><Name>P</Name><Name>a</Name></Atom>
+    </Construct>
+  </Titling>  
+  <Titling>
+    <Name cri="http://example.org/caseH/myText-H1#a"/>
+    <Construct>
+      <Comment>Even a change with no semantic effect, like a comment is enough to cause
+               inconsistency from titling different texts with the same name.</Comment>
+      <Atom><Name>P</Name><Name>a</Name></Atom>
+    </Construct>
+  </Titling>  
+</Construct>

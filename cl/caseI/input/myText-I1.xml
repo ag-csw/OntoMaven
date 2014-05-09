@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
+<Construct xmlns="http://iso-commonlogic.org/xcl2">
+  <Titling>
+    <Name cri="http://example.org/caseI/myText-I1#a"/>
+    <Construct>
+      <Atom><Name>P</Name><Name>a</Name></Atom>
+    </Construct>
+  </Titling>  
+  <Titling>
+    <Name cri="http://example.org/caseI/myText-I1#b"/>
+    <Construct>
+      <Titling>
+        <Comment>An inconsistency in titling only arises if the titling is asserted.
+          This nested titling only comes into play if its outer titling is imported.
+        </Comment>
+        <Name cri="http://example.org/caseI/myText-I1#a"/>
+        <Construct>
+          <Atom><Name>V</Name><Name>w</Name></Atom>
+        </Construct>
+      </Titling>  
+    </Construct>
+  </Titling>  
+</Construct>

@@ -21,4 +21,10 @@
   <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23a" uri="includes/2.xml"/>
   <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23b;dom1=http%3A%2F%2Fexample.org%2FcaseG%2FmyDomain-G1" uri="includes/3.xml"/>
   <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23b" uri="includes/4.xml"/>
+  <!-- Case H -->
+  <!-- No entries - fatal error. -->
+  <!-- Case I -->
+  <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseI%2FmyText-I1%23a" uri="includes/1.xml"/>
+  <!-- Case J -->
+  <!-- No entries - warning message about missing titling statement. -->
 </catalog>
