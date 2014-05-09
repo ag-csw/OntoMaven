@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Construct xmlns="http://iso-commonlogic.org/xcl2" xmlns:xi="http://www.w3.org/2003/XInclude">
+   <xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseF%2FmyText-F1%23b" parse="xml"/>
+   <Atom><Name>P</Name><Name>a</Name></Atom>
+</Construct>
