@@ -2,7 +2,7 @@
 <?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
 <Construct xmlns="http://iso-commonlogic.org/xcl2" xmlns:xi="http://www.w3.org/2003/XInclude">
   <Restrict>
-    <Name cri="http://example.org/caseC/myDomain-C1"/>
+    <Name cri="http://example.org/caseG/myDomain-G1"/>
     <xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseG%2FmyDomain-G1" parse="xml"/>
   </Restrict>
   <xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23b" parse="xml"/>
