@@ -2,7 +2,7 @@
 <?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
 <Construct xmlns="http://iso-commonlogic.org/xcl2"  xmlns:xi="http://www.w3.org/2003/XInclude">
   <Import>
-    <Name cri="http://example.org/caseK/myText-K1#b"/>
+    <Name cri="http://example.org/caseK/myText-K1#a"/>
   </Import> 
   <Import>
     <Name cri="http://example.org/caseK/myText-K1#c"/>

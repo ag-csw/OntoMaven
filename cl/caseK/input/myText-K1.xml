@@ -2,7 +2,7 @@
 <?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
 <Construct xmlns="http://iso-commonlogic.org/xcl2" >
   <Titling>
-    <Name cri="http://example.org/caseK/myText-K1#b"/>
+    <Name cri="http://example.org/caseK/myText-K1#a"/>
     <Construct>
       <Titling>
         <Comment>This nested titling only comes into play when its outer titling is imported.
@@ -12,10 +12,11 @@
           <Atom><Name>V</Name><Name>w</Name></Atom>
         </Construct>
       </Titling>  
+      <Atom><Name>P</Name><Name>a</Name></Atom>
     </Construct>
   </Titling>  
   <Titling>
-    <Name cri="http://example.org/caseK/myText-K1#d"/>
+    <Name cri="http://example.org/caseK/myText-K1#b"/>
     <Construct>
       <Titling>
         <Comment>This nested titling will not be active in this case, because the outer titling is not imported.
@@ -25,6 +26,7 @@
           <Atom><Name>Y</Name><Name>z</Name></Atom>
         </Construct>
       </Titling>  
+      <Atom><Name>R</Name><Name>c</Name></Atom>      
     </Construct>
   </Titling>  
 </Construct>
