@@ -1,0 +1,148 @@
+## This is a public beta version of the Common Logic Relax NG schema obtained from https://github.com/RuleML/xcl2/blob/master/relaxng/xcl2b.rnc
+
+default namespace = "http://iso-commonlogic.org/xcl2"
+namespace xi = "http://www.w3.org/2003/XInclude"
+
+
+## Common Logic Syntax XCL2 (Draft)
+start = clRoot
+clRoot = Corpus | clText | clStatement | clSentence
+
+## Corpora
+Corpus = element Corpus { Corpus.type }
+Corpus.type = clCommon, clRoot*
+
+## Texts
+clText = Construct | Restrict | Import
+
+## -Text Constructions
+Construct = element Construct { Construct.type }
+Construct.type = clCommon, (clText | clStatement | clSentence | Xinclude)*
+
+## -Domain Restrictions
+Restrict = element Restrict { Restrict.type }
+Restrict.type = clCommon, clTerm, clText
+
+## -Imports
+Import = element Import { Import.type }
+Import.type = clCommon, Name
+
+## Statements
+clStatement = In | Out | Titling
+
+## -Discourse Statements
+In = element In { Discourse.type }
+Out = element Out { Discourse.type }
+Discourse.type = clCommon, Name+
+
+## -Text Titlings
+Titling = element Titling { Titling.type }
+Titling.type = clCommon, Name, clText
+
+## Sentences
+clSentence =
+  Atom
+  | Equal
+  | And
+  | Or
+  | Not
+  | Implies
+  | Equivalent
+  | Forall
+  | Exists
+
+## -Atomic Formulas
+Atom = element Atom { Atom.type }
+Atom.type = clCommon, clTerm, clTermSequence
+
+## -Equals
+Equal = element Equal { Equal.type }
+Equal.type = clCommon, clTerm, clTerm
+
+## -Connectives
+And = element And { AndOr.type }
+Or = element Or { AndOr.type }
+AndOr.type = clCommon, clSentence*
+Not = element Not { Not.type }
+Not.type = clCommon, clSentence
+Implies = element Implies { Implies.type }
+Implies.type = clCommon, clSentence, clSentence
+Equivalent = element Equivalent { Equivalent.type }
+Equivalent.type = clCommon, clSentence, clSentence
+
+## -Quantifications
+Forall = element Forall { Forall.type }
+Exists = element Exists { Exists.type }
+Forall.type = Quantifier.type
+Exists.type = Quantifier.type
+Quantifier.type = clCommon, Name+, clSentence
+
+## Term Sequences
+clTermSequence = (clTerm | Marker)*
+
+## Terms
+clTerm = Apply | Name
+
+## -Functional Terms
+Apply = element Apply { Apply.type }
+Apply.type = clCommon, clTerm, clTermSequence
+
+## -Names
+Name = element Name { Name.type }
+Name.type =
+  (clCommon, (cri.attrib | symbol)) |
+  (key.attrib?, (text & anyElement*))
+symbol = element symbol { symbol.type }
+symbol.type = (text & anyElement*)
+cri.attrib = attribute cri { curieOrAbsIRI.datatype }
+
+## Constrained Names in Quantifiers
+Quantifier.type |= clCommon, Name-constrained+, clSentence
+Name-constrained = element Name { Name-constrained.type }
+Name-constrained.type =
+  (clCommon, type*, (cri.attrib | symbol)) |
+  (key.attrib?, (text & anyElement*))
+type = element type{ type.type }
+type.type = Name
+
+## Data
+clTerm |= Data
+Data = element Data { Data.type }
+Data.type =
+  (clCommon, symbol-data) |
+  (key.attrib?, datatype.attrib?, (text & anyElement*))
+symbol-data = element symbol { symbol-data.type }
+symbol-data.type = datatype.attrib?, (text & anyElement*)
+datatype.attrib = attribute datatype { curieOrAbsIRI.datatype }
+
+## Sequence Markers
+Marker = element Marker { Marker.type }
+Marker.type =
+  (clCommon, symbol) |
+  (key.attrib?, (text & anyElement*))
+
+## The clCommon pattern: Prefixes, Comments, Keys
+clCommon = key.attrib?, Prefix*, Comment?
+Prefix = element Prefix { Prefix.type }
+Prefix.type = pre.attrib, iri.attrib
+pre.attrib = attribute pre { pre.datatype }
+pre.datatype = xsd:NCName?
+Comment = element Comment { attribute * { text }*, (text & anyElement*) }
+iri.attrib = attribute iri { absIRI.datatype }
+key.attrib = attribute key { curieOrAbsIRI.datatype }
+curieOrAbsIRI.datatype = curie.datatype | absIRI.datatype
+curie.datatype = xsd:string { minLength = "1" pattern = "(([\i-[:]][\c-[:]]*)?:)?.*"}
+absIRI.datatype = xsd:anyURI { pattern = "[\i-[:]][\c-[:]]*:.*" }
+anyElement =
+  element * {
+    attribute * { text }*,
+    (text & anyElement*)
+  }
+
+## Xincludes
+Xinclude = element xi:include { Xinclude.type }
+Xinclude.type = XIhref.attrib, XIparse.attrib
+XIhref.attrib = attribute href { XIhref.datatype }
+XIhref.datatype = xsd:anyURI
+XIparse.attrib = attribute parse {XIparse.datatype}
+XIparse.datatype = token "xml" | token "text" 
