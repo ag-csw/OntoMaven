@@ -1,0 +1,29 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>example.de.ontologies</groupId>	
+  <artifactId>Person-OWL-Ontology</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <type>owl</type>
+  <name>Person-Ontology</name>
+  <url>http://example.org</url>
+  <description>
+    It is an example for an ontology in owl
+  </description>
+  <organization>
+    <name>PersonOwl</name>
+    <url>http://www.example.org</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>Creative Commons Attribution License</name>
+      <url>http://creativecommons.org/licenses/by/2.0/ </url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Roger </name>
+    </developer>
+  </developers>
+    
+</project>

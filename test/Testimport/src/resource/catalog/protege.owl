@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://protege.stanford.edu/plugins/owl/protege#"
+     xml:base="http://protege.stanford.edu/plugins/owl/protege"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:xsp="http://www.owl-ontologies.com/2005/08/07/xsp.owl#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <owl:Ontology rdf:about="http://protege.stanford.edu/plugins/owl/protege"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <owl:AnnotationProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#defaultLanguage"/>
+    <owl:AnnotationProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#todoProperty"/>
+    <owl:AnnotationProperty rdf:about="http://www.owl-ontologies.com/2005/08/07/xsp.owl#minInclusive"/>
+    <owl:AnnotationProperty rdf:about="http://www.owl-ontologies.com/2005/08/07/xsp.owl#maxLength"/>
+    <owl:AnnotationProperty rdf:about="http://www.owl-ontologies.com/2005/08/07/xsp.owl#fractionDigits"/>
+    <owl:AnnotationProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#subclassesDisjoint"/>
+    <owl:AnnotationProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#probeClass"/>
+    <owl:AnnotationProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#SLOT-CONSTRAINTS"/>
+    <owl:AnnotationProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#abstract"/>
+    <owl:AnnotationProperty rdf:about="http://www.owl-ontologies.com/2005/08/07/xsp.owl#length"/>
+    <owl:AnnotationProperty rdf:about="http://www.owl-ontologies.com/2005/08/07/xsp.owl#totalDigits"/>
+    <owl:AnnotationProperty rdf:about="http://www.owl-ontologies.com/2005/08/07/xsp.owl#minLength"/>
+    <owl:AnnotationProperty rdf:about="http://www.owl-ontologies.com/2005/08/07/xsp.owl#pattern"/>
+    <owl:AnnotationProperty rdf:about="http://www.owl-ontologies.com/2005/08/07/xsp.owl#maxInclusive"/>
+    <owl:AnnotationProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#usedLanguage"/>
+    <owl:AnnotationProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#readOnly"/>
+    <owl:AnnotationProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#allowedParent"/>
+    <owl:AnnotationProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#excludedTest"/>
+    <owl:AnnotationProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#todoPrefix"/>
+    <owl:AnnotationProperty rdf:about="http://www.owl-ontologies.com/2005/08/07/xsp.owl#maxExclusive"/>
+    <owl:AnnotationProperty rdf:about="http://www.owl-ontologies.com/2005/08/07/xsp.owl#minExclusive"/>
+    <owl:AnnotationProperty rdf:about="http://www.owl-ontologies.com/2005/08/07/xsp.owl#base"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Datatypes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://protege.stanford.edu/plugins/owl/protege#FROM -->
+
+    <owl:ObjectProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#FROM">
+        <rdfs:domain rdf:resource="http://protege.stanford.edu/plugins/owl/protege#DIRECTED-BINARY-RELATION"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://protege.stanford.edu/plugins/owl/protege#TO -->
+
+    <owl:ObjectProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#TO">
+        <rdfs:domain rdf:resource="http://protege.stanford.edu/plugins/owl/protege#DIRECTED-BINARY-RELATION"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Data properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://protege.stanford.edu/plugins/owl/protege#PAL-DESCRIPTION -->
+
+    <owl:DatatypeProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#PAL-DESCRIPTION">
+        <rdfs:domain rdf:resource="http://protege.stanford.edu/plugins/owl/protege#PAL-CONSTRAINT"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://protege.stanford.edu/plugins/owl/protege#PAL-NAME -->
+
+    <owl:DatatypeProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#PAL-NAME">
+        <rdfs:domain rdf:resource="http://protege.stanford.edu/plugins/owl/protege#PAL-CONSTRAINT"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://protege.stanford.edu/plugins/owl/protege#PAL-RANGE -->
+
+    <owl:DatatypeProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#PAL-RANGE">
+        <rdfs:domain rdf:resource="http://protege.stanford.edu/plugins/owl/protege#PAL-CONSTRAINT"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://protege.stanford.edu/plugins/owl/protege#PAL-STATEMENT -->
+
+    <owl:DatatypeProperty rdf:about="http://protege.stanford.edu/plugins/owl/protege#PAL-STATEMENT">
+        <rdfs:domain rdf:resource="http://protege.stanford.edu/plugins/owl/protege#PAL-CONSTRAINT"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://protege.stanford.edu/plugins/owl/protege#DIRECTED-BINARY-RELATION -->
+
+    <owl:Class rdf:about="http://protege.stanford.edu/plugins/owl/protege#DIRECTED-BINARY-RELATION"/>
+    
+
+
+    <!-- http://protege.stanford.edu/plugins/owl/protege#PAL-CONSTRAINT -->
+
+    <owl:Class rdf:about="http://protege.stanford.edu/plugins/owl/protege#PAL-CONSTRAINT"/>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version [Not Released]) http://owlapi.sourceforge.net -->
+

@@ -1,0 +1,277 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Spring</title>
+<script src="http://d3js.org/d3.v2.js"></script>
+<script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
+<script src="js\visualizer.js"></script>
+
+ <style type="text/css">
+
+path.link {
+  fill: none;
+  stroke: #666;
+  stroke-width: 1.5px;
+}
+
+marker#licensing {
+  fill: green;
+}
+
+path.link.licensing {
+  stroke: green;
+}
+
+path.link.resolved {
+  stroke-dasharray: 0,2 1;
+}
+
+circle {
+  fill: #ccc;
+  stroke: #333;
+  stroke-width: 1.5px;
+}
+
+text {
+  font: 10px sans-serif;
+  pointer-events: none;
+}
+
+text.shadow {
+  stroke: #fff;
+  stroke-width: 3px;
+  stroke-opacity: .8;
+}
+
+</style>
+<style type="text/css">
+
+
+
+</style>
+<!-- p style="border-width:12px; border-color:#FF9999; border-style:inset; padding:5px;">
+Textabsatz mit Rahmendicke 12px und Typ inset.</p>
+
+<p style="border-width:medium; border-color:#66CC66; border-style:solid; padding:5px;">
+Textabsatz mit Rahmendicke medium und Typ solid.</p>
+ -->
+
+
+ <script type="text/javascript">
+    
+//function  toggleColor(evt){
+	
+	//var canvas = document.getElementById("canvasRechteck");
+   // var context = canvas.getContext("2d");
+    //var x = screen.width;
+  //  var y = screen.height;
+    //var body = document.getElementsByName("body");
+    
+	
+   		//if(evt.type == "mouseover"){
+   			
+   	
+   			
+   			//var div = document.createElement("div");
+   			//var div = document.getElementById('test');
+   		     
+   			
+   			//div.setAttribute("class","stern");
+   			
+   			//body.appendChild(div);
+   			
+   			
+        	//	evt.target.setAttribute("opacity", "1.0");
+        		
+        //	evt.target.setAttribute("style", "background-color:Highlight");
+        
+        
+        		//var newnode = document.createElement('canvas');
+        		
+        		//var canvas = document.getElementById("canvas");
+        		//canvas.setAttribute("witdh","200");
+        		//canvas.setAttribute("height","300");
+        		
+        		
+        		//var c1_context = canvas.getContext("2d");
+ 			    //c1_context.fillStyle = "#f00";
+ 			    //c1_context.rect(50, 50, 100, 100);
+ 			    //c1_context.stroke();
+        		
+        		//newnode.setAttribute("id","test");
+        		//newnode.setAttribute("witdh","200");
+        		//newnode.setAttribute("height","300");
+       		
+        		
+        	//	document.getElementById("c1").appendChild(newnode);
+ 				
+        	//	var cc = document.getElementById("c1").firstChild;
+        		
+        	//	cc.setAttribute("id","test");
+        		
+        		
+        		
+        		
+       // 		alert("test");
+        		
+        //		if(document.getElementById("test") != null){
+        			
+
+        			   
+        			
+        			
+        			
+        	//}
+        		
+        		
+        		//var a = evt.target.getAttributeNS(null, "id");
+        		
+        		//var name = document.getElementById(a).getAttribute("id");
+        		
+        		
+        	//	 body.setAttribute("style","color:grey");
+        		
+        	
+        	    		//alert(x);
+        		
+        	//	evt.target.setAttribute("width", "200");
+        	//	evt.target.setAttribute("height", "300");
+        		
+        	//	if(document.getElementById("c1") != null){
+        			
+        			
+        	//		alert("test");
+        	//	}
+           		
+               // context.fillStyle = "#FF0000";
+                
+                
+                //context.fillRect(800, 450, 150, 75);
+               // context.clearRect(10, 30, 110, 35);
+        		
+        		
+        //}else{
+        	
+        		//var body = document.getElementById("body");
+        	//	var div1 = document.getElementById("test")
+        	//	div1.removeAttribute("class");
+        		
+        		
+        	//	evt.target.setAttribute("opacity", "0.4");
+        	
+        		//context.clearRect(800, 450, 150, 75);
+        		//var bb = document.getElementById("c1");
+        		//var el = document.getElementById("test");
+        		
+        		//bb.removeChild(el);
+        		
+        		//evt.target.setAttribute("width", "100");
+        		//evt.target.setAttribute("height", "50");
+        	
+        	// body.setAttribute("style","color:grey");
+        			
+        //}
+   		
+   	
+   		
+   		
+//}
+function K_Name(evt){
+	
+	if(evt.type == "mouseover"){
+		
+		var a = evt.target.getAttributeNS(null, "id");
+		
+		var name = document.getElementById(a).getAttribute("id");
+		
+		return name;
+		
+		
+	}
+	
+	
+}
+
+
+function getDataProp(name){
+
+		switch (name) {
+			  				case "Range":
+    				return "units:string<br>max:float<br>min:float<br>";
+    				break;
+    		  				case "Money":
+    				return "currency:string<br>";
+    				break;
+    		  				case "Lens":
+    				return "focal-length:string<br>f-stop:string<br>aperture:string<br>size:string<br>";
+    				break;
+    		    		default:
+    			return "";
+    			break;		
+		
+		}
+		
+}
+
+function getObjectProp(name){
+
+		switch (name) {
+			  				case "PurchaseableItem":
+    				return "cost:Money<br>";
+    				break;
+    		  				case "Body":
+    				return "shutter-speed:Range<br>";
+    				break;
+    		  				case "Camera":
+    				return "body:Body<br>viewFinder:Viewer<br>part:Viewer<br>lens:Lens<br>";
+    				break;
+    		  				case "Lens":
+    				return "compatibleWith:Body<br>";
+    				break;
+    		    		default:
+    			return "";
+    			break;		
+		
+		}
+		
+}
+
+
+
+
+
+function Test(evt){
+	
+	//var name = K_Name();
+	var a = evt.target.getAttributeNS(null, "id");
+		
+	var name = document.getElementById(a).getAttribute("id");
+	
+	
+	return " <div id =\"test\"> <table border=\"1\"><tr><td>"+name+"</td></tr><tr><td>"+getDataProp(name)+"<br>"+getObjectProp(name)+"</td></tr></table></div> ";
+}
+        	
+</script> 
+
+
+</head>
+<body id="body" >
+
+<script type="text/javascript" src="js\wz_tooltip.js"></script>
+
+
+<!-- <span id="test"> </span> -->
+
+<script type="text/javascript">
+
+	spring();		//Die Funktion von test.js Hauptfunktion
+
+</script>  
+
+
+
+
+
+</body>
+</html>

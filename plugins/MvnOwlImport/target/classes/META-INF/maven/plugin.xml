@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+  <name>MvnOwlImport Maven Mojo</name>
+  <description></description>
+  <groupId>de.csw.MvnOnt</groupId>
+  <artifactId>MvnOwlImport</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <goalPrefix>MvnOwlImport</goalPrefix>
+  <isolatedRealm>false</isolatedRealm>
+  <inheritedByDefault>true</inheritedByDefault>
+  <mojos>
+    <mojo>
+      <goal>owlimport</goal>
+      <description></description>
+      <requiresDirectInvocation>false</requiresDirectInvocation>
+      <requiresProject>true</requiresProject>
+      <requiresReports>false</requiresReports>
+      <aggregator>false</aggregator>
+      <requiresOnline>false</requiresOnline>
+      <inheritedByDefault>true</inheritedByDefault>
+      <phase>process-sources</phase>
+      <implementation>de.csw.MvnOnt.Main</implementation>
+      <language>java</language>
+      <instantiationStrategy>per-lookup</instantiationStrategy>
+      <executionStrategy>once-per-session</executionStrategy>
+      <threadSafe>false</threadSafe>
+      <parameters>
+        <parameter>
+          <name>file_location</name>
+          <type>java.lang.String</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description>Location of the import files, which are stored, and catalog.xml</description>
+        </parameter>
+        <parameter>
+          <name>local</name>
+          <type>boolean</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description>If the import files are stored</description>
+        </parameter>
+        <parameter>
+          <name>owlfile</name>
+          <type>java.lang.String</type>
+          <required>true</required>
+          <editable>true</editable>
+          <description>Location of the ontology file.</description>
+        </parameter>
+      </parameters>
+      <configuration>
+        <file_location implementation="java.lang.String" default-value="src/resource/catalog">${catalog}</file_location>
+        <local implementation="boolean" default-value="false">${local}</local>
+        <owlfile implementation="java.lang.String" default-value="src/resource/owl/pizza.owl">${owl}</owlfile>
+      </configuration>
+    </mojo>
+  </mojos>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-plugin-api</artifactId>
+      <type>jar</type>
+      <version>2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-api</artifactId>
+      <type>jar</type>
+      <version>3.4</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-apibinding</artifactId>
+      <type>jar</type>
+      <version>3.4</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-impl</artifactId>
+      <type>jar</type>
+      <version>3.4</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-parsers</artifactId>
+      <type>jar</type>
+      <version>3.4</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-tools</artifactId>
+      <type>jar</type>
+      <version>3.4</version>
+    </dependency>
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <type>jar</type>
+      <version>2.10.0</version>
+    </dependency>
+    <dependency>
+      <groupId>xml-apis</groupId>
+      <artifactId>xml-apis</artifactId>
+      <type>jar</type>
+      <version>1.4.01</version>
+    </dependency>
+    <dependency>
+      <groupId>xml-resolver</groupId>
+      <artifactId>xml-resolver</artifactId>
+      <type>jar</type>
+      <version>1.2</version>
+    </dependency>
+  </dependencies>
+</plugin>
