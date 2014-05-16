@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE catalog PUBLIC "-//OASIS//DTD XML Catalogs V1.1//EN" "http://www.oasis-open.org/committees/entity/release/1.1/catalog.dtd">
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+  <!-- Case K -->
+  <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseK%2FmyText-K1%23b" uri="includes/1.xml"/>
+  <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseK%2FmyText-K1%23c" uri="includes/2.xml"/>
+</catalog>
