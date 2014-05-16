@@ -14,13 +14,5 @@
       </Titling>  
       <Atom><Name>P</Name><Name>a</Name></Atom>
     </Construct>
-  </Titling>         
-  <Titling>
-    <Comment>This nested titling only comes into play when its outer titling is imported.
-    </Comment>
-    <Name cri="http://example.org/caseL/myText-L1#c"/>
-    <Construct>
-      <Atom><Name>V</Name><Name>w</Name></Atom>
-    </Construct>
-  </Titling>  
+  </Titling>          
 </Construct>

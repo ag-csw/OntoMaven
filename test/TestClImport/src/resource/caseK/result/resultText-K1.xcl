@@ -29,12 +29,4 @@
       <Atom><Name>R</Name><Name>c</Name></Atom>      
     </Construct>
   </Titling>     
-  <Titling>
-    <Comment>This nested titling only comes into play when its outer titling is imported.
-    </Comment>
-    <Name cri="http://example.org/caseK/myText-K1#c"/>
-    <Construct>
-      <Atom><Name>V</Name><Name>w</Name></Atom>
-    </Construct>
-  </Titling>  
 </Construct>
