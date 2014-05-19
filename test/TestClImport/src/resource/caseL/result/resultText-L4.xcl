@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
+<Construct xmlns="http://iso-commonlogic.org/xcl2">         
+  <Titling>
+    <Comment>This nested titling only comes into play when its outer titling is imported.
+    </Comment>
+    <Name cri="http://example.org/caseL/myText-L1#c"/>
+    <Construct>
+      <Atom><Name>V</Name><Name>w</Name></Atom>
+    </Construct>
+  </Titling>  
+</Construct>
