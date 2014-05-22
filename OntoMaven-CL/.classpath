@@ -22,6 +22,8 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="src" path="test/TestClImport/src/main/java"/>
+	<classpathentry kind="src" path="test/TestClImport/src/resource"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>
@@ -32,10 +34,9 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/User/workspace_java/cl-importer/lib/commons-lang-2.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/User/workspace_java/cl-importer/lib/dom4j-1.6.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/User/workspace_java/cl-importer/lib/jdom2-2.0.5.jar"/>
-	<classpathentry kind="lib" path="C:/Users/User/workspace_java/cl-importer/lib/xml-security-1.0.4.jar"/>
-	<classpathentry kind="src" path="/Book"/>
+	<classpathentry kind="lib" path="lib/commons-lang-2.3.jar"/>
+	<classpathentry kind="lib" path="lib/dom4j-1.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/jdom2-2.0.5.jar"/>
+	<classpathentry kind="lib" path="lib/xml-security-1.0.4.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
