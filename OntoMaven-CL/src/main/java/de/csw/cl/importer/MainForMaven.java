@@ -65,4 +65,8 @@ public class MainForMaven extends AbstractMojo {
 		System.out.println("Saving catalog file...");
 		catalog.saveCatalogFile();
 	}
+	
+	public void setClFile(File clFile) {
+		this.clFile = clFile;
+	}
 }
