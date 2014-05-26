@@ -17,8 +17,10 @@ import java.util.Date;
 
 import org.apache.log4j.Logger;
 
+import util.XMLUtil;
 import de.csw.cl.importer.MainForMaven;
 import de.csw.cl.importer.algorithm.CLImportationAlgorithm;
+import de.csw.cl.importer.model.ConflictingTitlingException;
 
 /**
  * @author ralph
@@ -57,6 +59,8 @@ public class ClImportTestRunner {
 				CLImportationAlgorithm algo = new CLImportationAlgorithm(xclFile);
 				try {
 					algo.run();
+				} catch (ConflictingTitlingException e) {
+					System.err.println("Conflicting titlings (same name, different content) have been detected: " + e.getName() + ". Aborting.");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

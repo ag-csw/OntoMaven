@@ -86,7 +86,7 @@ public class CLImportationAlgorithm {
 		try {
 			loadCorpus();
 		} catch (ConflictingTitlingException e) {
-			System.out.println("Error: The corpus includes two conflicting titlings with the same name: " + e.getName() + ". Aborting.");
+//			System.out.println("Error: The corpus includes two conflicting titlings with the same name: " + e.getName() + ". Aborting.");
 			throw e;
 		}
 		
@@ -187,6 +187,7 @@ public class CLImportationAlgorithm {
 				importHistory.push(xincludeHref);
 				break;
 			case Restrict:
+				restrictHistory.add(getName(e));
 				break;
 			case Titling:
 				// do not process import directives in titlings (yet).
