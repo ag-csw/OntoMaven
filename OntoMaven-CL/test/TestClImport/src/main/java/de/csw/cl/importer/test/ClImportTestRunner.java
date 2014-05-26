@@ -44,10 +44,13 @@ public class ClImportTestRunner {
 		
 		File baseDir = new File(args[0]);
 		
-		String testCases = "ABCDEFGHIJKL";
+		File[] caseDirs = baseDir.listFiles(new FileFilter() {
+			public boolean accept(File file) {
+				return file.isDirectory() && file.getName().matches("case[A-Z]");
+			}
+		});
 		
-		for (int i = 0; i < testCases.length(); i++) {
-			File caseDir = new File(baseDir, "case" + testCases.charAt(i));
+		for (File caseDir : caseDirs) {
 			File inputDir = new File(caseDir, "input");
 			File[] xclFiles = inputDir.listFiles(new FilenameFilter() {
 				public boolean accept(File dir, String name) {
