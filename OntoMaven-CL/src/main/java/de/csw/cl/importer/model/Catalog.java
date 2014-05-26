@@ -8,8 +8,8 @@ import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.Namespace;
 
-import de.csw.cl.importer.MainForMaven;
 import util.XMLUtil;
+import de.csw.cl.importer.MainForMaven;
 
 /**
  * Represents and manages a catalog for common logic files. In this catalog

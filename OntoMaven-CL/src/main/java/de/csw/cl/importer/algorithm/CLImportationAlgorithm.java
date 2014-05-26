@@ -5,7 +5,6 @@ package de.csw.cl.importer.algorithm;
 
 import static util.XMLUtil.NS_XCL2;
 
-import java.awt.image.TileObserver;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.UnsupportedEncodingException;
@@ -15,8 +14,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
-
-import net.sf.saxon.expr.PairIterator;
 
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -276,8 +273,9 @@ public class CLImportationAlgorithm {
 		StringBuilder buf = new StringBuilder();
 		int domainCounter = 1;
 		for (String restrictName : restrictHistory) {
-			buf.append(';');
+			buf.append(";dom");
 			buf.append(domainCounter++);
+			buf.append('=');
 			try {
 				buf.append(URLEncoder.encode(restrictName, "UTF-8"));
 			} catch (UnsupportedEncodingException e) {
