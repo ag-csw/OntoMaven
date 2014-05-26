@@ -4,71 +4,115 @@
 package de.csw.cl.importer.test;
 
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Arrays;
 
-import org.apache.log4j.Logger;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
-import util.XMLUtil;
-import de.csw.cl.importer.MainForMaven;
 import de.csw.cl.importer.algorithm.CLImportationAlgorithm;
 import de.csw.cl.importer.model.ConflictingTitlingException;
 
 /**
+ * Unit test for the CL import algorithm.
  * @author ralph
- * 
  */
+@RunWith(value = Parameterized.class)
 public class ClImportTest {
+	
+	private static File baseDir;
+	
+	
+	@BeforeClass
+	public static void setup() {
+		String baseDirPath = System.getProperty("baseDir");
+		if (baseDirPath == null) {
+			System.err.println("Please pass the path to the base directory (the directory containing all 'caseX' directories as a system property (VM argument in eclipse) -DbaseDir=<path to base directory>.)");
+			System.exit(-1);
+		}
+		baseDir = new File(baseDirPath);
+	}
 
-	private static final Logger LOG = Logger
-			.getLogger(ClImportTest.class);
-
+	@Parameters
+	public static Iterable<Object[]> data() {
+		Object[][] data = new Object[][] {
+			   { "caseA", null },
+			   { "caseB", null },
+			   { "caseC", null },
+			   { "caseD", null },
+			   { "caseE", null },
+			   { "caseF", null },
+			   { "caseG", null },
+			   { "caseH", ConflictingTitlingException.class },
+			   { "caseI", null },
+			   { "caseJ", null },
+			   { "caseK", null },
+			   { "caseL", null },
+			   { "caseN", null }
+			   };
+		return Arrays.asList(data);
+	}
+	
+	private String caseDirName;
+	private Class<Throwable> expectedThrowable;
+	
+	public ClImportTest(String caseDirName, Class<Throwable> expectedThrowable) {
+		if (System.getProperty("baseDir") == null) {
+			System.err.println("Please pass the path to the base directory (the directory containing all 'caseX' directories as an argument.)");
+			System.exit(-1);
+		}
+		this.caseDirName = caseDirName;
+		this.expectedThrowable = expectedThrowable;
+	}
+	
+	
 	/**
 	 * 
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	@Test
+	public void testAll() {
+		File caseDir = new File(baseDir, caseDirName);
+		File inputDir = new File(caseDir, "input");
 		
-		if (args.length != 1) {
-			System.err.println("Please pass the path to the base directory (the directory containing all 'caseX' directories as an argument.)");
-			System.exit(-1);
-		}
-		
-		File baseDir = new File(args[0]);
-		
-		File[] caseDirs = baseDir.listFiles(new FileFilter() {
-			public boolean accept(File file) {
-				return file.isDirectory() && file.getName().matches("case[A-Z]");
+		File[] xclFiles = inputDir.listFiles(new FilenameFilter() {
+			public boolean accept(File dir, String name) {
+				return name.endsWith(".xcl");
 			}
 		});
 		
-		for (File caseDir : caseDirs) {
-			File inputDir = new File(caseDir, "input");
-			File[] xclFiles = inputDir.listFiles(new FilenameFilter() {
-				public boolean accept(File dir, String name) {
-					return name.endsWith(".xcl");
+		// run algorithm on folder and fail if an inexpected exception is caught
+		for (File xclFile : xclFiles) {
+			System.out.println("Running algorithm on file "
+					+ xclFile.getAbsolutePath());
+			
+			CLImportationAlgorithm algo = new CLImportationAlgorithm(xclFile);
+			
+			try {
+				algo.run();
+			} catch (ConflictingTitlingException e) {
+				if (expectedThrowable != null && expectedThrowable.isAssignableFrom(ConflictingTitlingException.class)) {
+					System.out.println("Conflicting titlings (same name, different content) have been detected as expected: "
+									+ e.getName() + ". Aborting.");
+				} else {
+					assert(false);
 				}
-			});
-			for (File xclFile : xclFiles) {
-				System.out.println("Running algorithm on file " + xclFile.getAbsolutePath());
-				CLImportationAlgorithm algo = new CLImportationAlgorithm(xclFile);
-				try {
-					algo.run();
-				} catch (ConflictingTitlingException e) {
-					System.err.println("Conflicting titlings (same name, different content) have been detected: " + e.getName() + ". Aborting.");
-				} catch (Exception e) {
-					e.printStackTrace();
+			} catch (Throwable t) {
+				if (expectedThrowable == null || !expectedThrowable.isAssignableFrom(t.getClass())) {
+					assert(false);
 				}
 			}
 		}
+		
+		// TODO compare files
+		
+		
 	}
+	
+	
 
 }
