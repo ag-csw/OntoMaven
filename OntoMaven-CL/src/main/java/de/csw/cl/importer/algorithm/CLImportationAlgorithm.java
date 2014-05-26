@@ -18,6 +18,7 @@ import java.util.SortedSet;
 import java.util.Stack;
 import java.util.TreeSet;
 
+import org.jdom2.Comment;
 import org.jdom2.Content;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -192,20 +193,18 @@ public class CLImportationAlgorithm {
 					
 					pendingReplacements.add(new ElementPair(e, newXincludeElement));
 					
-					if (newXincludeElement == null) {
+					if (!isXInclude(newXincludeElement)) {
 						// cyclic import
-						System.out.println("*** Circle: removing " + e);
-						return;
-					}
-					
-					System.out.println("*** Replacing " + e + " with " + newXincludeElement);
-					
-					if (newXincludeElement != null) {
-						List<Element> children = newXincludeElement.getChildren();
-						for (Element child : children) {
-							// importProcessed is true because we have just performed an import
-							processImport(child, importHistory, restrictHistory, pendingReplacements);
-						}
+    						System.out.println("*** Circle: removing " + e);
+    						return;
+					}		
+    					
+				    System.out.println("*** Replacing " + e + " with " + newXincludeElement);
+				
+					List<Element> children = newXincludeElement.getChildren();
+					for (Element child : children) {
+						// importProcessed is true because we have just performed an import
+						processImport(child, importHistory, restrictHistory, pendingReplacements);
 					}
 				}
 				return;
@@ -215,7 +214,7 @@ public class CLImportationAlgorithm {
 				String fileHash = catalog.getFileHash(xincludeHref);
 				Element referencedInclude = includes.getInclude(fileHash, null);
 				
-				// the refereced include root element is supposed to be a Titling
+				// the referenced include root element is supposed to be a Titling
 				if (!referencedInclude.getName().equals("Titling")) {
 					System.err.println("Include " + xincludeHref + ": Root is not a Titling");
 				}
@@ -245,12 +244,16 @@ public class CLImportationAlgorithm {
 		
 		switch(elementType) {
 			case Import:
+			    break;
 			case include:
 				importHistory.pop();
 				break;
 			case Restrict:
 				restrictHistory.pop();
 				break;
+			default :
+			    break;
+				
 		}
 		
 	}
@@ -259,38 +262,43 @@ public class CLImportationAlgorithm {
 	 * Performs the import of a titling. Replaces the current Import element with an Xinclude element,
 	 * adds the imported content to an external file and adds a mapping in the xml catalog. 
 	 * @param importElement
-	 * @param titledContent
+	 * @param titledElement
 	 * @param importHistory
 	 * @param restrictHistory
 	 * @return the new xml include element or null if a cyclic import was detected. 
 	 */
-	private Element executeImport(Element importElement, Element titledContent, Stack<String> importHistory, Stack<String> restrictHistory) {
+	private Element executeImport(Element importElement, Element titledElement, Stack<String> importHistory, Stack<String> restrictHistory) {
 		String titlingName = getName(importElement);
 		
 		String includeURI = getXincludeURI(titlingName, restrictHistory);
+		
 
 		if (importHistory.contains(includeURI)) {
-			// cyclic import 
-			return null;
-		}
-		
-		
-		// create a new xinclude element and replace the content of this element with it
-		Element xincludeElement = new Element("include", XMLUtil.NS_XINCLUDE);
-		xincludeElement.setAttribute("href", includeURI);
-		xincludeElement.setAttribute("parse", "xml");
-		
-		String hashCode = XMLUtil.getMD5Hash(titledContent);
+            // duplicate import 
+            Element xincludeConstruct = new Element("Construct", XMLUtil.NS_XCL2);
+            String commentString = "<include xmlns=\"http://www.w3.org/2001/XInclude\" href=\"";
+            commentString = commentString +  includeURI.toString();
+            commentString = commentString +  "\"/>";
+            xincludeConstruct.addContent(new Comment(commentString));
+            return xincludeConstruct;
+        }
+
+	      // create a new xinclude element and replace the content of this element with it
+        Element xincludeElement = new Element("include", XMLUtil.NS_XINCLUDE);
+        xincludeElement.setAttribute("href", includeURI);
+        xincludeElement.setAttribute("parse", "xml");
+
+		String hashCode = XMLUtil.getMD5Hash(titledElement);
 		
 		// put the content of the titled text into a separate file
-		titledContent = includes.getInclude(hashCode, titledContent);
+		titledElement = includes.getInclude(hashCode, titledElement);
 		
 		// add a mapping to the xml catalog
 		catalog.addMapping(includeURI, hashCode);
 		
 		importHistory.push(includeURI);
 		
-		return xincludeElement;
+        return xincludeElement;
 	}
 	
 	private String getXincludeURI(String titlingName, Stack<String> restrictHistory) {
@@ -332,20 +340,49 @@ public class CLImportationAlgorithm {
 		return buf.toString();
 	}
 	
-	private boolean isTitling(Element e) {
-		return e.getName().equals("Titling");
+	private boolean isTitling(Content e) {
+	    switch(e.getCType()) {
+	        case Element : 
+	            return ((Element) e).getName().equals("Titling");
+            default:
+                return false;
+	    }
 	}
-	
-	private boolean isImport(Element e) {
-		return e.getName().equals("Import");
-	}
-	
-	private boolean isRestrict(Element e) {
-		return e.getName().equals("Restrict");
-	}
-	
-	private boolean isXinclude(Element e) {
-		return e.getName().equals("xinclude");
+
+   private boolean isImport(Content e) {
+        switch(e.getCType()) {
+            case Element : 
+                return ((Element) e).getName().equals("Import");
+            default:
+                return false;
+        }
+    }
+
+   private boolean isRestrict(Content e) {
+       switch(e.getCType()) {
+           case Element : 
+               return ((Element) e).getName().equals("Restrict");
+           default:
+               return false;
+       }
+   }
+
+   private boolean isXInclude(Content e) {
+       switch(e.getCType()) {
+           case Element : 
+               return ((Element) e).getName().equals("xinclude");
+           default:
+               return false;
+       }
+   }
+
+	private boolean isComment(Content e) {
+	       switch(e.getCType()) {
+           case Comment : 
+               return true;
+           default:
+               return false;
+       }
 	}
 	
 	/**
