@@ -1,5 +1,6 @@
 package de.csw.cl.importer;
 
+import java.io.File;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
@@ -8,6 +9,7 @@ import org.jdom2.Document;
 import org.jdom2.Element;
 
 import util.FileUtil;
+import util.XMLUtil;
 import de.csw.cl.importer.model.Construct;
 import de.csw.cl.importer.model.Import;
 import de.csw.cl.importer.model.Restrict;
@@ -30,7 +32,7 @@ public class ContentLoader {
 	public static Construct loadConstruct(Element constructElement) {
 		// 1. Loading the titlings in this construct
 		List<Titling> titlings = new LinkedList<Titling>();
-		if (constructElement.getDocument() != MainForMaven.mainDocument) {
+		if (constructElement.getDocument() != Main.mainDocument) {
 			for (Element titlingElement : constructElement.getChildren(
 					"Titling", constructElement.getNamespace()))
 				titlings.add(loadTitling(titlingElement));
@@ -62,8 +64,8 @@ public class ContentLoader {
 				// Case 3.1.2: This is not a circular import
 				} else {
 					
-					if (constructElement.getDocument() != MainForMaven.mainDocument)
-						removeTitlingParent(importElement);
+					if (constructElement.getDocument() != Main.mainDocument)
+						activateTitling(importElement, false);
 				}
 				
 			// Case 3.2: This construct is NOT a child of a titling -> regular import
@@ -98,8 +100,8 @@ public class ContentLoader {
 			
 			// Case 2.2: Circular importing
 			} else {
-				if (titlingElement.getDocument() != MainForMaven.mainDocument)
-					removeTitlingParent(importElement);
+				if (titlingElement.getDocument() != Main.mainDocument)
+					activateTitling(importElement, false);
 			}
 		}
 
@@ -134,20 +136,24 @@ public class ContentLoader {
 		Import importDecl = new Import("http://ontomaven.org?uri=" + url
 			+ restrictURI, downloadURL, importElement, false, url, fragment);
 		
-		// If this is a local import, don't realize it
-		if (isLocalImport(importDecl)){
-			System.err.println("Import not realized -> Local import: " +
-					importDecl.getOriginalURL());
-			return;
-		}
-		
-		// If the file to import is loadable, add it to the list.
-		// Else print an error message.
-		if (FileUtil.existsHTTPFile(importDecl.getDownloadURL()))
-			listToAdd.add(importDecl);
-		else
+		// If the file to import is not loadable, print an error message.
+		if (!FileUtil.existsHTTPFile(importDecl.getDownloadURL())){
 			System.err.println("Import not realized -> File"
 				+ "not existing: " + importDecl.getDownloadURL());
+		}
+		
+		// If import is already existing, don't taje ut against
+		if (Main.catalog.containsImportDeclaration(importDecl)){
+			System.out.println("Import " + importDecl.getOriginalURL()
+					+ " already existing.");
+			activateTitling(importElement, true);
+			return;
+		} else {
+			Main.catalog.addImport(importDecl);
+		}
+		
+		// Adding import to the target list
+		listToAdd.add(importDecl);
 	}
 	
 
@@ -196,26 +202,38 @@ public class ContentLoader {
 	 * 
 	 * @param element from that the wrapper titling elements will be removed
 	 */
-	public static void removeTitlingParent(Element element) {
-		
+	public static void activateTitling(Element element, boolean ifRemoveElement) {
 		// Finding all titling parents which are not the root of the document
-		LinkedList<Element> parents = new LinkedList<Element>();
 		Element currentParent = element.getParentElement();
+	
+		if (ifRemoveElement)
+			element.detach();
+		
 		while (currentParent != null && !currentParent.isRootElement()) {
-			parents.add(currentParent);
-			if (currentParent.getName().equals("Titling"))
+			
+			for (Element child: currentParent.getChildren()){
+				child.detach();
+				if (!child.getName().equals("Name"))
+					currentParent.getParentElement().addContent(child);
+			}
+			
+			
+			
+			if (currentParent.getName().equals("Titling")){
+				
+				currentParent.detach();
 				break;
-			currentParent = currentParent.getParentElement();
-		}
+			}
+			
 
-		// Removing the found titlings by adding their children to
-		// their parents and removing them
-		for (Element parent : parents) {
-			List<Element> children = parent.getChildren();
-			parent.removeContent();
-			parent.getParentElement().addContent(children);
-			parent.getParentElement().removeContent(parent);
+			Element oldCurrentParent = currentParent;
+			currentParent = currentParent.getParentElement();
+			oldCurrentParent.detach();
+			
+			
 		}
+		
+		
 	}
 	
 	/**
@@ -234,20 +252,23 @@ public class ContentLoader {
 			return null;
 		return name;
 	}
-	
+
 	/**
-	 * Checks, if an import declaration is importing a local element
+	 * Saves a given document in the includes directory, if not existing
 	 */
-	public  static  boolean isLocalImport(Import importDecl){
-		Document docOfImport = importDecl.getOriginalXMLElement().getDocument();
-		
-		for (Element rootChild: docOfImport.getRootElement().getChildren()){
-			if (!rootChild.getName().equals("Import") && getNameOf(rootChild) != null
-				&& getNameOf(rootChild).contains(importDecl.getOriginalURL().
-				replace("#" + importDecl.getFragment(), "")) && !getNameOf(rootChild).
-				equals(importDecl.getOriginalURL())){
-				return true;
-		}}
-		return false;
+	
+	public static void saveInclude(Document documentToSave, String fileName){
+		boolean ifSaveFile = true;
+		for (File existingFile : new File("includes").listFiles()) {
+			if (existingFile.getName().equals(fileName))
+				ifSaveFile = false;
+		}
+		if (ifSaveFile){
+			XMLUtil.writeXML(documentToSave, new File("includes"
+					+ File.separator + fileName));
+			System.out.println("File " + fileName + " has been saved.");
+		}else {
+			System.out.println(fileName + " already existing and not saved.");
+		}
 	}
 }

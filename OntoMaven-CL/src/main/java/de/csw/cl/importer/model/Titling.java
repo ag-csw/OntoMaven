@@ -78,8 +78,10 @@ public class Titling {
 	 * Solves the own imports and the imports of the inner elements.
 	 */
 	public void solveImports() {
-		for (Import importDeclaration : imports)
+		for (Import importDeclaration : imports){
 			importDeclaration.solve();
+			imports.remove(importDeclaration);
+		}
 		
 		for (Construct construct : constructs)
 			construct.solveImports();
