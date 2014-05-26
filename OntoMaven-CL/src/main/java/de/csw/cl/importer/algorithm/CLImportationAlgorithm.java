@@ -35,7 +35,7 @@ public class CLImportationAlgorithm {
 	
 	private enum ELEMENT_TYPE {Titling, Restrict, Import, include, other}
 	
-	private File baseFile;
+	private File inputFile;
 	private File baseDir;
 	
 	private File resultDir;
@@ -50,13 +50,19 @@ public class CLImportationAlgorithm {
 
 	
 	/**
-	 * 
-	 * @param baseFile
+	 * Constructs a {@link CLImportationAlgorithm} object initialized with a given base file.
+	 * If the base file resides in directory inputDir, the following file layout will be used:
+	 * <ul>
+	 * <li> All xcl files residing in inputDir will be considered the corpus.
+	 * <li> The resulting xcl file with the importation closure will be saved to inputDir/../result.
+	 * <li> Additional files for inclusion will be saved in inputDir/result/includes.
+	 * </ul>
+	 * @param inputFile
 	 */
-	public CLImportationAlgorithm(File baseFile) {
-		this.baseFile = baseFile;
+	public CLImportationAlgorithm(File inputFile) {
+		this.inputFile = inputFile;
 
-		baseDir = baseFile.getParentFile();
+		baseDir = inputFile.getParentFile();
 		resultDir = new File(baseDir.getParentFile(), "test-result");
 		includesDir = new File(resultDir, "includes");
 
@@ -80,13 +86,13 @@ public class CLImportationAlgorithm {
 		try {
 			loadCorpus();
 		} catch (ConflictingTitlingException e) {
-			System.out.println("Error: The corpus includes two conflicting titlings with the same name: " + e.getName() + ". Aborting.");
+//			System.out.println("Error: The corpus includes two conflicting titlings with the same name: " + e.getName() + ". Aborting.");
 			throw e;
 		}
 		
 		processImports();
 		
-		XMLUtil.writeXML(corpus.getBaseDocument(), new File(resultDir, baseFile.getName()));
+		XMLUtil.writeXML(corpus.getBaseDocument(), new File(resultDir, inputFile.getName()));
 		catalog.write();
 		includes.writeIncludes();
 	}
@@ -96,12 +102,12 @@ public class CLImportationAlgorithm {
 	 * @throws ConflictingTitlingException
 	 */
 	private void loadCorpus() throws ConflictingTitlingException {
-		Document baseDocument = XMLUtil.readLocalDoc(baseFile);
+		Document baseDocument = XMLUtil.readLocalDoc(inputFile);
 		corpus = new Corpus(baseDocument);
 		
 		File[] files = baseDir.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
-				return name.toLowerCase().endsWith(".xcl") && !name.equals(baseFile.getName());
+				return name.toLowerCase().endsWith(".xcl") && !name.equals(inputFile.getName());
 			}
 		});
 		
@@ -152,9 +158,7 @@ public class CLImportationAlgorithm {
 			elementType = ELEMENT_TYPE.valueOf(e.getName());
 		} catch (IllegalArgumentException plannedException) {
 			elementType = ELEMENT_TYPE.other;
-		} catch (NullPointerException bla) {
-			bla.printStackTrace();
-		}
+		}	
 		
 		switch (elementType) {
 			case Import:
@@ -183,6 +187,7 @@ public class CLImportationAlgorithm {
 				importHistory.push(xincludeHref);
 				break;
 			case Restrict:
+				restrictHistory.add(getName(e));
 				break;
 			case Titling:
 				// do not process import directives in titlings (yet).
@@ -319,12 +324,4 @@ public class CLImportationAlgorithm {
 		Element replacement;
 	}
 	
-	public static void main(String[] args) {
-		CLImportationAlgorithm i = new CLImportationAlgorithm(new File("/Users/ralph/Desktop/import-test/caseK/input/myText-K2.xcl"));
-		try {
-			i.run();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 }
