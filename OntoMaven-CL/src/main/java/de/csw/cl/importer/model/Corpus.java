@@ -121,10 +121,10 @@ public class Corpus {
 				throw new ConflictingTitlingException(titlingName,
 						existingImportableTitling, e);
 			} else {
-				System.out.println("Titling " + titlingName + " exists. Skipping.");
+				System.out.println("  Titling " + titlingName + " exists. Skipping.");
 			}
 		} else {
-			System.out.println("Adding titling " + titlingName);
+			System.out.println("  Adding titling " + titlingName);
 			
 			// store the titling, remove surrounding titling element
 			// if it has more than one direct children, put a Construct element around them
