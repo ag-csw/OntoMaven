@@ -64,7 +64,7 @@ public class CLImportationAlgorithm {
 		includesDir = new File(resultDir, "includes");
 
 		includes = new Includes(includesDir);
-		catalog = new XMLCatalog(new File(baseDir, "catalog.xml"));
+		catalog = new XMLCatalog(new File(resultDir, "catalog.xml"));
 	}
 	
 	/**
