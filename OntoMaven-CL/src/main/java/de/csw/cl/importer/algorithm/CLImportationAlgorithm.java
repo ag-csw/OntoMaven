@@ -92,7 +92,7 @@ public class CLImportationAlgorithm {
 		
 		processImports();
 		
-		XMLUtil.writeXML(corpus.getBaseDocument(), new File(resultDir, inputFile.getName()));
+		XMLUtil.writeXML(corpus.getBaseDocument(), new File(resultDir, inputFile.getName().replaceAll("myText", "resultText")));
 		catalog.write();
 		includes.writeIncludes();
 	}
@@ -256,7 +256,7 @@ public class CLImportationAlgorithm {
 	
 	private String getXincludeURI(String titlingName, Stack<String> restrictHistory) {
 		try {
-			return XMLUtil.NS_ONTOMAVEN + "?uri=" + URLEncoder.encode(titlingName, "UTF-8") + getRestrictionFragment(restrictHistory);
+			return XMLUtil.NS_ONTOMAVEN.getURI() + "?uri=" + URLEncoder.encode(titlingName, "UTF-8") + getRestrictionFragment(restrictHistory);
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
@@ -265,7 +265,7 @@ public class CLImportationAlgorithm {
 	
 	private String getTitlingName(String xincludeURI) {
 		try {
-			return URLDecoder.decode(xincludeURI.replace(XMLUtil.NS_ONTOMAVEN + "?uri=", ""), "UTF-8");
+			return URLDecoder.decode(xincludeURI.replace(XMLUtil.NS_ONTOMAVEN.getURI() + "?uri=", ""), "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
