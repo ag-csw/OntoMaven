@@ -127,18 +127,9 @@ public class Corpus {
 			System.out.println("  Adding titling " + titlingName);
 			
 			// store the titling, remove surrounding titling element
-			// if it has more than one direct children, put a Construct element around them
+			// if it has more than one direct child, put a Construct element around them
 			
-			List<Element> children = e.getChildren();
-			children.remove(nameElement);
-			
-			if (children.size() == 1) {
-				importableTitlings.put(titlingName, children.get(0));
-			} else {
-				Element constructElement = new Element("Construct", XMLUtil.NS_XCL2);
-				constructElement.addContent(children);
-				importableTitlings.put(titlingName, constructElement);
-			}
+			importableTitlings.put(titlingName, e);
 		}
 	}
 	
