@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.Arrays;
 
+import junit.framework.TestCase;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -22,7 +24,7 @@ import de.csw.cl.importer.model.ConflictingTitlingException;
  * @author ralph
  */
 @RunWith(value = Parameterized.class)
-public class ClImportTest {
+public class ClImportTest extends TestCase {
 	
 	private static File baseDir;
 	
@@ -52,6 +54,7 @@ public class ClImportTest {
 			   { "caseJ", null },
 			   { "caseK", null },
 			   { "caseL", null },
+			   { "caseM", null },
 			   { "caseN", null }
 			   };
 		return Arrays.asList(data);
@@ -85,6 +88,8 @@ public class ClImportTest {
 			}
 		});
 		
+		boolean fail = false;
+		
 		// run algorithm on folder and fail if an inexpected exception is caught
 		for (File xclFile : xclFiles) {
 			System.out.println("Running algorithm on file "
@@ -94,19 +99,29 @@ public class ClImportTest {
 			
 			try {
 				algo.run();
+				if (expectedThrowable != null ) {
+					System.err.println("Exception of type " + expectedThrowable.getCanonicalName() + " expected, but none has been thrown.");
+					fail = true;
+				}
 			} catch (ConflictingTitlingException e) {
 				if (expectedThrowable != null && expectedThrowable.isAssignableFrom(ConflictingTitlingException.class)) {
 					System.out.println("Conflicting titlings (same name, different content) have been detected as expected: "
-									+ e.getName() + ". Aborting.");
+									+ e.getName() + ".");
 				} else {
-					assert(false);
+					System.err.println("Unexpected conflicting titlings with name " + e.getName());
+					fail = true;
 				}
 			} catch (Throwable t) {
 				if (expectedThrowable == null || !expectedThrowable.isAssignableFrom(t.getClass())) {
-					assert(false);
+					System.err.println("Unexpected exceeption : " + t.getLocalizedMessage());
+					t.printStackTrace();
+					fail = true;
 				}
 			}
 		}
+		
+		if (fail)
+			fail();
 		
 		// TODO compare files
 		
