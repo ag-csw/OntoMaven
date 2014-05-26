@@ -26,13 +26,13 @@ import de.csw.cl.importer.model.ConflictingTitlingException;
  * @author ralph
  * 
  */
-public class ClImportTestRunner {
+public class ClImportTest {
 
 	private static final Logger LOG = Logger
-			.getLogger(ClImportTestRunner.class);
+			.getLogger(ClImportTest.class);
 
 	/**
-	 * R
+	 * 
 	 * @param args
 	 */
 	public static void main(String[] args) {
