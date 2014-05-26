@@ -5,7 +5,6 @@ package de.csw.cl.importer.algorithm;
 
 import static util.XMLUtil.NS_XCL2;
 
-import java.awt.image.TileObserver;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.UnsupportedEncodingException;
@@ -15,8 +14,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
-
-import net.sf.saxon.expr.PairIterator;
 
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -67,7 +64,7 @@ public class CLImportationAlgorithm {
 		includesDir = new File(resultDir, "includes");
 
 		includes = new Includes(includesDir);
-		catalog = new XMLCatalog(new File(baseDir, "catalog.xml"));
+		catalog = new XMLCatalog(new File(resultDir, "catalog.xml"));
 	}
 	
 	/**
@@ -92,7 +89,7 @@ public class CLImportationAlgorithm {
 		
 		processImports();
 		
-		XMLUtil.writeXML(corpus.getBaseDocument(), new File(resultDir, inputFile.getName()));
+		XMLUtil.writeXML(corpus.getBaseDocument(), new File(resultDir, inputFile.getName().replaceAll("myText", "resultText")));
 		catalog.write();
 		includes.writeIncludes();
 	}
@@ -256,7 +253,7 @@ public class CLImportationAlgorithm {
 	
 	private String getXincludeURI(String titlingName, Stack<String> restrictHistory) {
 		try {
-			return XMLUtil.NS_ONTOMAVEN + "?uri=" + URLEncoder.encode(titlingName, "UTF-8") + getRestrictionFragment(restrictHistory);
+			return XMLUtil.NS_ONTOMAVEN.getURI() + "?uri=" + URLEncoder.encode(titlingName, "UTF-8") + getRestrictionFragment(restrictHistory);
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
@@ -265,7 +262,7 @@ public class CLImportationAlgorithm {
 	
 	private String getTitlingName(String xincludeURI) {
 		try {
-			return URLDecoder.decode(xincludeURI.replace(XMLUtil.NS_ONTOMAVEN + "?uri=", ""), "UTF-8");
+			return URLDecoder.decode(xincludeURI.replace(XMLUtil.NS_ONTOMAVEN.getURI() + "?uri=", ""), "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
@@ -276,8 +273,9 @@ public class CLImportationAlgorithm {
 		StringBuilder buf = new StringBuilder();
 		int domainCounter = 1;
 		for (String restrictName : restrictHistory) {
-			buf.append(';');
+			buf.append(";dom");
 			buf.append(domainCounter++);
+			buf.append('=');
 			try {
 				buf.append(URLEncoder.encode(restrictName, "UTF-8"));
 			} catch (UnsupportedEncodingException e) {
