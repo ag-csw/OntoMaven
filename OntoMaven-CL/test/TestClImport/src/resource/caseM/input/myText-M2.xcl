@@ -7,10 +7,10 @@
       <Atom><Name>P</Name><Name cri="http://example.org#a"/></Atom>
     </Construct>
   </Titling>  
-  <Titling key="ex:ttl3">
+  <Titling>
     <!-- This version of the titling has a key attribute. -->
     <Name cri="http://example.org/caseM/myText-M2#a"/>
-    <Construct>
+    <Construct  key="ex:ttl3">
       <Atom><Name>P</Name><Name cri="http://example.org#a"/></Atom>
     </Construct>
   </Titling>  
