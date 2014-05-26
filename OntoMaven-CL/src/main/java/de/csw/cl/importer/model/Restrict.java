@@ -47,8 +47,10 @@ public class Restrict {
 	 * Solves imports.
 	 */
 	public void solveImports() {
-		for (Import importDecl: imports)
+		for (Import importDecl: imports) {
 			importDecl.solve();
+			imports.remove(importDecl);
+		}
 	}
 	
 	/**

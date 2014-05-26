@@ -8,6 +8,7 @@ import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.Namespace;
 
+import de.csw.cl.importer.MainForMaven;
 import util.XMLUtil;
 
 /**
@@ -91,6 +92,6 @@ public class Catalog {
 			newElement.setNamespace(Namespace.getNamespace("http://www.w3.org/2001/XInclude"));
 			catalogDocument.getRootElement().addContent(newElement);
 		}
-		XMLUtil.writeXML(catalogDocument, new File("catalog.xml"));
+		XMLUtil.writeXML(catalogDocument, new File(MainForMaven.destDir, "catalog.xml"));
 	}
 }

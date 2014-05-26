@@ -1,7 +1,5 @@
 package de.csw.cl.importer.model;
 
-import java.io.File;
-
 import org.jdom2.Attribute;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -9,7 +7,7 @@ import org.jdom2.Namespace;
 
 import util.XMLUtil;
 import de.csw.cl.importer.ContentLoader;
-import de.csw.cl.importer.MainForMaven;
+import de.csw.cl.importer.Main;
 
 /**
  * Represents a import declaration in common logic. 
@@ -147,14 +145,6 @@ public class Import {
 				}
 			}
 		}
-
-		// Adding this import declaration to catalog if not yet
-		if (!MainForMaven.catalog.containsImportDeclaration(this)) {
-			MainForMaven.catalog.addImport(this);
-			System.out.println("Import added to catalog.");
-		} else{
-			System.out.println("Impor already existing in catalog.");
-		}
 		
 		// Replacing import element in the xml with an include element
 		originalXMLElement.setName("include");
@@ -172,27 +162,27 @@ public class Import {
 		System.out.println("Import element has been replaced with include element.");
 		
 		// Removing the wrapper titling element
-		ContentLoader.removeTitlingParent(originalXMLElement);		
+		ContentLoader.activateTitling(originalXMLElement, false);		
 
 		// Getting java representation of the currently loaded document
 		// If it contains imports, first they have to been solved
 		// If not, the file can be directly saved
 		if (ContentLoader.loadConstruct(loadedDocument.getRootElement())
 				.hasAnyImports()) {
-			MainForMaven.documentsToDo.add(loadedDocument);
+			Main.documentsToDo.add(loadedDocument);
 		} else {
-			boolean ifSaveFile = true;
-			for (File existingFile : new File("includes").listFiles()) {
-				if (existingFile.getName().equals(fileName))
-					ifSaveFile = false;
-			}
-			if (ifSaveFile){
-				XMLUtil.writeXML(loadedDocument, new File("includes"
-						+ File.separator + fileName));
-				System.out.println("File " + fileName + " has been saved.");
-			}else {
-				System.out.println(fileName + " already existing and not saved.");
-			}
+			String fileNameOfLoaded = XMLUtil.getCanonicalXML(loadedDocument)
+					.hashCode() + ".xml";
+			ContentLoader.saveInclude(loadedDocument, fileNameOfLoaded);
+		}
+		
+		// Saving the document of this import, if it does not have more imports
+		Document documentOfThisImport = originalXMLElement.getDocument();
+		if (documentOfThisImport != Main.mainDocument && !ContentLoader.
+			loadConstruct(documentOfThisImport.getRootElement()).hasAnyImports()) {
+			String fileName = String.valueOf(XMLUtil.getCanonicalXML(
+					documentOfThisImport).hashCode());
+			ContentLoader.saveInclude(documentOfThisImport, fileName);
 		}
 		
 		System.out.println("--------------------------------------------------");
