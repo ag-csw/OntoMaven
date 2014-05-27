@@ -25,8 +25,12 @@ public class XMLCatalog {
 		this.catalogFile = catalogFile;
 	}
 	
-	public void addMapping(String uri, String filePath) {
-		uriMappings.put(uri, filePath);
+	public void addMapping(String uri, String fileHash) {
+		uriMappings.put(uri, fileHash);
+	}
+	
+	public String getFileHash(String uri) {
+		return uriMappings.get(uri);
 	}
 	
 	public void write() {
@@ -40,7 +44,7 @@ public class XMLCatalog {
 		for (Entry<String, String> mapping : uriMappings.entrySet()) {
 			Element newElement = new Element("uri");
 			newElement.setAttribute("name", mapping.getKey());
-			newElement.setAttribute("uri", mapping.getValue());
+			newElement.setAttribute("uri", "includes/" + mapping.getValue()+ ".xml");
 			newElement.setNamespace(XMLUtil.NS_CATALOG);
 			catalogDocument.getRootElement().addContent(newElement);
 		}
@@ -49,8 +53,8 @@ public class XMLCatalog {
 	
 	public static void main(String[] args) {
 		XMLCatalog c = new XMLCatalog(new File("/tmp/catalog.xml"));
-		c.addMapping("http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseL%2FmyText-L1%23a", "includes/1.xml");
-		c.addMapping("http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseL%2FmyText-L1%23c", "includes/2.xml");
+		c.addMapping("http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseL%2FmyText-L1%23a", "1");
+		c.addMapping("http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseL%2FmyText-L1%23c", "2");
 		c.write();
 	}
 }

@@ -126,7 +126,7 @@ public class CLImportationAlgorithm {
 			// TODO: possible performance optimization: remember unexecutable imports hidden in titled texts and process them without having to traverse the whole corpus again.
 			List<ElementPair> pendingReplacements = new LinkedList<CLImportationAlgorithm.ElementPair>(); 
 					
-			processImport(corpus.getBaseDocument().getRootElement(), false, new Stack<String>(), new Stack<String>(), pendingReplacements);
+			processImport(corpus.getBaseDocument().getRootElement(), new Stack<String>(), new Stack<String>(), pendingReplacements);
 			
 			// done
 			if (pendingReplacements.isEmpty())
@@ -148,7 +148,7 @@ public class CLImportationAlgorithm {
 	 * @param e an Import element
 	 * @return True if an import has been executed, false otherwise
 	 */
-	private void processImport(Element e, boolean importProcessed, Stack<String> importHistory, Stack<String> restrictHistory, List<ElementPair> pendingReplacements) {
+	private void processImport(Element e, Stack<String> importHistory, Stack<String> restrictHistory, List<ElementPair> pendingReplacements) {
 		
 		ELEMENT_TYPE elementType = null;
 		try {
@@ -174,14 +174,17 @@ public class CLImportationAlgorithm {
 						List<Element> children = newXincludeElement.getChildren();
 						for (Element child : children) {
 							// importProcessed is true because we have just performed an import
-							processImport(child, true, importHistory, restrictHistory, pendingReplacements);
+							processImport(child, importHistory, restrictHistory, pendingReplacements);
 						}
 					}
 				}
 				return;
 			case include:
 				String xincludeHref = e.getAttributeValue("href");
-				importHistory.push(xincludeHref);
+//				importHistory.push(xincludeHref);
+				String fileHash = catalog.getFileHash(xincludeHref);
+				Element referencedInclude = includes.getInclude(fileHash, null);
+				processImport(referencedInclude, importHistory, restrictHistory, pendingReplacements);
 				break;
 			case Restrict:
 				restrictHistory.add(getName(e));
@@ -198,13 +201,13 @@ public class CLImportationAlgorithm {
 		
 		List<Element> children = e.getChildren();
 		for (Element child : children) {
-			processImport(child, importProcessed, importHistory, restrictHistory, pendingReplacements);
+			processImport(child, importHistory, restrictHistory, pendingReplacements);
 		}
 		
 		switch(elementType) {
 			case Import:
 			case include:
-				importHistory.pop();
+//				importHistory.pop();
 				break;
 			case Restrict:
 				restrictHistory.pop();
@@ -244,7 +247,7 @@ public class CLImportationAlgorithm {
 		titledContent = includes.getInclude(hashCode, titledContent);
 		
 		// add a mapping to the xml catalog
-		catalog.addMapping(includeURI, "includes/" + hashCode + ".xml");
+		catalog.addMapping(includeURI, hashCode);
 		
 		importHistory.push(includeURI);
 		

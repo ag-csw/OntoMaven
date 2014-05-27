@@ -72,10 +72,10 @@ public class Includes {
 	public Element getInclude(String fileHash, Element e) {
 		Element existingInclude = includes.get(fileHash);
 		if (existingInclude == null) {
+			existingInclude = e.clone();
 			includes.put(fileHash, e);
-			existingInclude = e;
 		}
-		return existingInclude.clone();
+		return existingInclude;
 	}
 	
 }
