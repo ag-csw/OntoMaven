@@ -10,13 +10,18 @@ import java.io.FilenameFilter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.SortedSet;
 import java.util.Stack;
+import java.util.TreeSet;
 
+import org.jdom2.Content;
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.jdom2.Parent;
 
 import util.XMLUtil;
 import de.csw.cl.importer.model.ConflictingTitlingException;
@@ -44,6 +49,7 @@ public class CLImportationAlgorithm {
 	// not used for now
 	private final Queue<Element> potentiallyPendingImports = new LinkedList<Element>();
 
+	private HashSet<Element> visitedElements;
 	
 	/**
 	 * Constructs a {@link CLImportationAlgorithm} object initialized with a given base file.
@@ -132,6 +138,7 @@ public class CLImportationAlgorithm {
 			List<ElementPair> pendingReplacements = new LinkedList<CLImportationAlgorithm.ElementPair>(); 
 			
 			for (Document document : documentsInCorpus) {
+				visitedElements = new HashSet<Element>();
 				processImport(document.getRootElement(), new Stack<String>(), new Stack<String>(), pendingReplacements);
 			}
 			
@@ -140,10 +147,12 @@ public class CLImportationAlgorithm {
 				break;
 			
 			for (ElementPair pair : pendingReplacements) {
-				Element parent = pair.original.getParentElement();
+				Parent parent = pair.original.getParent();
 				int position = parent.indexOf(pair.original);
 				pair.original.detach();
-				parent.addContent(position, pair.replacement);
+				if (pair.replacement != null) {
+					parent.addContent(position, pair.replacement);
+				}
 			}
 			
 
@@ -157,13 +166,10 @@ public class CLImportationAlgorithm {
 	 */
 	private void processImport(Element e, Stack<String> importHistory, Stack<String> restrictHistory, List<ElementPair> pendingReplacements) {
 		
-		for (ElementPair elementPair : pendingReplacements) {
-			
-			if (elementPair.original == e) {
-				System.err.println("Been here: " + e);
-				return;
-			}
+		if (visitedElements.contains(e)) {
+			return;
 		}
+		visitedElements.add(e);
 		
 		ELEMENT_TYPE elementType = null;
 		try {
@@ -183,7 +189,14 @@ public class CLImportationAlgorithm {
 					// Otherwise: we have a matching titling. Replace the Import element with the contents of the Titling element.				
 					Element newXincludeElement = executeImport(e, titling, importHistory, restrictHistory);
 					
+					
 					pendingReplacements.add(new ElementPair(e, newXincludeElement));
+					
+					if (newXincludeElement == null) {
+						// cyclic import
+						System.out.println("*** Circle: removing " + e);
+						return;
+					}
 					
 					System.out.println("*** Replacing " + e + " with " + newXincludeElement);
 					
@@ -201,7 +214,16 @@ public class CLImportationAlgorithm {
 				importHistory.push(xincludeHref);
 				String fileHash = catalog.getFileHash(xincludeHref);
 				Element referencedInclude = includes.getInclude(fileHash, null);
-				processImport(referencedInclude, importHistory, restrictHistory, pendingReplacements);
+				
+				// the refereced include root element is supposed to be a Titling
+				if (!referencedInclude.getName().equals("Titling")) {
+					System.err.println("Include " + xincludeHref + ": Root is not a Titling");
+				}
+				
+				List<Element> children = referencedInclude.getChildren();
+				for (Element child : children) {
+					processImport(child, importHistory, restrictHistory, pendingReplacements);
+				}
 				break;
 			case Restrict:
 				restrictHistory.add(getName(e));
@@ -292,7 +314,11 @@ public class CLImportationAlgorithm {
 	private String getRestrictionFragment(Stack<String> restrictHistory) {
 		StringBuilder buf = new StringBuilder();
 		int domainCounter = 1;
-		for (String restrictName : restrictHistory) {
+		
+		TreeSet<String> restrictHistoryNormalized = new TreeSet<String>(restrictHistory);
+		
+		for (String restrictName : restrictHistoryNormalized) {
+			
 			buf.append(";dom");
 			buf.append(domainCounter++);
 			buf.append('=');
@@ -302,6 +328,7 @@ public class CLImportationAlgorithm {
 				e.printStackTrace();
 			}
 		}
+		
 		return buf.toString();
 	}
 	
