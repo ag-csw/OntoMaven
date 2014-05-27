@@ -7,10 +7,9 @@ import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
-import javax.xml.XMLConstants;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 
 import org.apache.xml.security.Init;
 import org.apache.xml.security.c14n.Canonicalizer;
@@ -18,17 +17,18 @@ import org.apache.xml.security.c14n.InvalidCanonicalizerException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
+import org.jdom2.Attribute;
+import org.jdom2.Content;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.Namespace;
+import org.jdom2.Parent;
+import org.jdom2.filter.Filter;
 import org.jdom2.input.SAXBuilder;
-import org.jdom2.input.sax.XMLReaderJDOMFactory;
-import org.jdom2.input.sax.XMLReaderSchemaFactory;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 import de.csw.cl.importer.MainForMaven;
 
@@ -107,8 +107,81 @@ public class XMLUtil {
 	 * @return
 	 */
 	public static String getCanonicalXML(Element element) {
+		element = element.clone();
+		
+		// Collect prefixes
+		final HashMap<String, String> prefixes = new HashMap<String, String>();
+		final HashSet<Element> toDelete = new HashSet<Element>();
+		
+		performRecursivelAction(element, new Action() {
+			public void doAction(Element e) {
+				if (e.getName().equals("Prefix")) {
+					prefixes.put(e.getAttributeValue("pre"), e.getAttributeValue("iri"));
+					toDelete.add(e);
+				}
+			}
+		});
+		
+		for (Element prefix : toDelete) {
+			prefix.detach();
+		}
+
+		final HashSet<Element> dataAndNonIriNamesWithoutSymbolEdge = new HashSet<Element>();
+		
+		performRecursivelAction(element, new Action() {
+			public void doAction(Element e) {
+				// resolve all CURIES
+				Attribute criAttr = e.getAttribute("cri");
+				if (criAttr != null) {
+					String cri = criAttr.getValue();
+					String[] split = cri.split(":");
+					if (split.length == 2) {
+						String prefix = split[0];
+						String iri = prefixes.get(prefix);
+						if (iri != null) {
+							criAttr.setValue(iri + split[1]);
+						}
+					}
+				}
+				
+				// remove key attributes				
+				e.removeAttribute("key");
+
+				// make the <symbol> edge explicit in non-IRI Names and Data elements
+				if (e.getName().equals("Name") && criAttr == null ||
+						e.getName().equals("Data")) {
+					if (e.getChildren().isEmpty()) {
+						String text = e.getTextNormalize();
+						if (text.length() != 0) {
+							dataAndNonIriNamesWithoutSymbolEdge.add(e);
+						}
+					}
+				}
+			}
+		});
+		
+		for (Element dataOrNonIriNameWithoutSymbolEdge : dataAndNonIriNamesWithoutSymbolEdge) {
+			String text = dataOrNonIriNameWithoutSymbolEdge.getTextNormalize();
+			dataOrNonIriNameWithoutSymbolEdge.setText("");
+			Element symbolElement = new Element("symbol", NS_XCL2);
+			dataOrNonIriNameWithoutSymbolEdge.addContent(symbolElement);
+			symbolElement.setText(text);
+		}
+		
 		String contentAsString = XML_OUT.outputString(element);
 		return getCanonicalXML(contentAsString);
+	}
+	
+	private static interface Action {
+		public void doAction(Element e);
+	}
+	
+	private static void performRecursivelAction(Element e, Action action) {
+		action.doAction(e);
+		List<Element> children = e.getChildren();
+		for (Element child : children) {
+			performRecursivelAction(child, action);
+		}
 	}
 	
 	private static String getCanonicalXML(String xmlString) {
@@ -204,7 +277,13 @@ public class XMLUtil {
 	 * @return
 	 */
 	public static boolean equal(Element e1, Element e2) {
-		return getCanonicalXML(e1).equals(getCanonicalXML(e2));
+		String aaaa = getCanonicalXML(e1);
+		String bbbb = getCanonicalXML(e2);
+		boolean result = aaaa.equals(bbbb);
+		if (result == false) {
+			System.out.println("O lala");
+		}
+		return result;
 	}
 	
 	public static void main(String[] args) {
