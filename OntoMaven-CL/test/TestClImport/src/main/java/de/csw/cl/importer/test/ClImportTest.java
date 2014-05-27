@@ -82,41 +82,32 @@ public class ClImportTest extends TestCase {
 		File caseDir = new File(baseDir, caseDirName);
 		File inputDir = new File(caseDir, "input");
 		
-		File[] xclFiles = inputDir.listFiles(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.endsWith(".xcl");
-			}
-		});
 		
 		boolean fail = false;
 		
 		// run algorithm on folder and fail if an inexpected exception is caught
-		for (File xclFile : xclFiles) {
-			System.out.println("Running algorithm on file "
-					+ xclFile.getAbsolutePath());
 			
-			CLImportationAlgorithm algo = new CLImportationAlgorithm(xclFile);
-			
-			try {
-				algo.run();
-				if (expectedThrowable != null ) {
-					System.err.println("Exception of type " + expectedThrowable.getCanonicalName() + " expected, but none has been thrown.");
-					fail = true;
-				}
-			} catch (ConflictingTitlingException e) {
-				if (expectedThrowable != null && expectedThrowable.isAssignableFrom(ConflictingTitlingException.class)) {
-					System.out.println("Conflicting titlings (same name, different content) have been detected as expected: "
-									+ e.getName() + ".");
-				} else {
-					System.err.println("Unexpected conflicting titlings with name " + e.getName());
-					fail = true;
-				}
-			} catch (Throwable t) {
-				if (expectedThrowable == null || !expectedThrowable.isAssignableFrom(t.getClass())) {
-					System.err.println("Unexpected exceeption : " + t.getLocalizedMessage());
-					t.printStackTrace();
-					fail = true;
-				}
+		CLImportationAlgorithm algo = new CLImportationAlgorithm(inputDir);
+		
+		try {
+			algo.run();
+			if (expectedThrowable != null ) {
+				System.err.println("Exception of type " + expectedThrowable.getCanonicalName() + " expected, but none has been thrown.");
+				fail = true;
+			}
+		} catch (ConflictingTitlingException e) {
+			if (expectedThrowable != null && expectedThrowable.isAssignableFrom(ConflictingTitlingException.class)) {
+				System.out.println("Conflicting titlings (same name, different content) have been detected as expected: "
+								+ e.getName() + ".");
+			} else {
+				System.err.println("Unexpected conflicting titlings with name " + e.getName());
+				fail = true;
+			}
+		} catch (Throwable t) {
+			if (expectedThrowable == null || !expectedThrowable.isAssignableFrom(t.getClass())) {
+				System.err.println("Unexpected exceeption : " + t.getLocalizedMessage());
+				t.printStackTrace();
+				fail = true;
 			}
 		}
 		

@@ -32,7 +32,6 @@ public class CLImportationAlgorithm {
 	
 	private enum ELEMENT_TYPE {Titling, Restrict, Import, include, other}
 	
-	private File inputFile;
 	private File baseDir;
 	
 	private File resultDir;
@@ -56,10 +55,9 @@ public class CLImportationAlgorithm {
 	 * </ul>
 	 * @param inputFile
 	 */
-	public CLImportationAlgorithm(File inputFile) {
-		this.inputFile = inputFile;
+	public CLImportationAlgorithm(File corpusDirectory) {
 
-		baseDir = inputFile.getParentFile();
+		baseDir = corpusDirectory;
 		resultDir = new File(baseDir.getParentFile(), "test-result");
 		includesDir = new File(resultDir, "includes");
 
@@ -89,7 +87,12 @@ public class CLImportationAlgorithm {
 		
 		processImports();
 		
-		XMLUtil.writeXML(corpus.getBaseDocument(), new File(resultDir, inputFile.getName().replaceAll("myText", "resultText")));
+		Iterable<Document> documentsInCorpus = corpus.getDocuments();
+
+		for (Document document : documentsInCorpus) {
+			XMLUtil.writeXML(document, new File(resultDir, corpus.getOriginalFile(document).getName().replaceAll("myText", "resultText")));
+		}
+		
 		catalog.write();
 		includes.writeIncludes();
 	}
@@ -99,18 +102,17 @@ public class CLImportationAlgorithm {
 	 * @throws ConflictingTitlingException
 	 */
 	private void loadCorpus() throws ConflictingTitlingException {
-		Document baseDocument = XMLUtil.readLocalDoc(inputFile);
-		corpus = new Corpus(baseDocument);
+		corpus = new Corpus();
 		
 		File[] files = baseDir.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
-				return name.toLowerCase().endsWith(".xcl") && !name.equals(inputFile.getName());
+				return name.toLowerCase().endsWith(".xcl");
 			}
 		});
 		
 		for (File file : files) {
 			Document doc = XMLUtil.readLocalDoc(file);
-			corpus.addDocument(doc);
+			corpus.addDocument(doc, file);
 		}
 	}
 	
@@ -120,13 +122,18 @@ public class CLImportationAlgorithm {
 	 * only unasserted import directives (nested in titlings) are available.
 	 */
 	private void processImports() {
+
+		Iterable<Document> documentsInCorpus = corpus.getDocuments();
+		
 		while(true) {
 			// repeat until a complete traversal does not yield any new import
 			// resolutions.
 			// TODO: possible performance optimization: remember unexecutable imports hidden in titled texts and process them without having to traverse the whole corpus again.
 			List<ElementPair> pendingReplacements = new LinkedList<CLImportationAlgorithm.ElementPair>(); 
-					
-			processImport(corpus.getBaseDocument().getRootElement(), new Stack<String>(), new Stack<String>(), pendingReplacements);
+			
+			for (Document document : documentsInCorpus) {
+				processImport(document.getRootElement(), new Stack<String>(), new Stack<String>(), pendingReplacements);
+			}
 			
 			// done
 			if (pendingReplacements.isEmpty())
@@ -150,6 +157,14 @@ public class CLImportationAlgorithm {
 	 */
 	private void processImport(Element e, Stack<String> importHistory, Stack<String> restrictHistory, List<ElementPair> pendingReplacements) {
 		
+		for (ElementPair elementPair : pendingReplacements) {
+			
+			if (elementPair.original == e) {
+				System.err.println("Been here: " + e);
+				return;
+			}
+		}
+		
 		ELEMENT_TYPE elementType = null;
 		try {
 			elementType = ELEMENT_TYPE.valueOf(e.getName());
@@ -170,6 +185,8 @@ public class CLImportationAlgorithm {
 					
 					pendingReplacements.add(new ElementPair(e, newXincludeElement));
 					
+					System.out.println("*** Replacing " + e + " with " + newXincludeElement);
+					
 					if (newXincludeElement != null) {
 						List<Element> children = newXincludeElement.getChildren();
 						for (Element child : children) {
@@ -181,7 +198,7 @@ public class CLImportationAlgorithm {
 				return;
 			case include:
 				String xincludeHref = e.getAttributeValue("href");
-//				importHistory.push(xincludeHref);
+				importHistory.push(xincludeHref);
 				String fileHash = catalog.getFileHash(xincludeHref);
 				Element referencedInclude = includes.getInclude(fileHash, null);
 				processImport(referencedInclude, importHistory, restrictHistory, pendingReplacements);
@@ -207,7 +224,7 @@ public class CLImportationAlgorithm {
 		switch(elementType) {
 			case Import:
 			case include:
-//				importHistory.pop();
+				importHistory.pop();
 				break;
 			case Restrict:
 				restrictHistory.pop();

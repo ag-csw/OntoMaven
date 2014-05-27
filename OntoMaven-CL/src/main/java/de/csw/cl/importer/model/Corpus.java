@@ -5,6 +5,7 @@ package de.csw.cl.importer.model;
 
 import static util.XMLUtil.NS_XCL2;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,8 +33,7 @@ public class Corpus {
 	
 	private static Logger LOG = Logger.getLogger(Corpus.class);
 
-	private final Document baseDocument;
-	private final HashSet<Document> documents = new HashSet<Document>();
+	private final HashMap<Document, File> documents = new HashMap<Document, File>();
 	
 
 	// All top-level titlings (by name) that are available for importation.
@@ -48,9 +48,7 @@ public class Corpus {
 	 * @param documents
 	 * @throws ConflictingTitlingException 
 	 */
-	public Corpus(Document baseDocument) throws ConflictingTitlingException {
-		this.baseDocument = baseDocument;
-		addDocument(baseDocument);
+	public Corpus() throws ConflictingTitlingException {
 	}
 
 	/**
@@ -60,17 +58,21 @@ public class Corpus {
 	 *            the document to add.
 	 * @throws ConflictingTitlingException 
 	 */
-	public void addDocument(Document doc) throws ConflictingTitlingException {
-		documents.add(doc);
+	public void addDocument(Document doc, File documentFile) throws ConflictingTitlingException {
+		documents.put(doc, documentFile);
 		extractTitlings(doc.getRootElement());
 	}
 	
 	/**
-	 * Returns the base document.
-	 * @return
+	 * Returns an {@link Iterable} over all documents contained in this {@link Corpus}.
+	 * @return an {@link Iterable} over all documents contained in this {@link Corpus}. 
 	 */
-	public Document getBaseDocument() {
-		return baseDocument;
+	public Iterable<Document> getDocuments() {
+		return documents.keySet();
+	}
+	
+	public File getOriginalFile(Document doc) {
+		return documents.get(doc);
 	}
 	
 	/**
@@ -125,9 +127,6 @@ public class Corpus {
 			}
 		} else {
 			System.out.println("  Adding titling " + titlingName);
-			
-			// store the titling, remove surrounding titling element
-			// if it has more than one direct child, put a Construct element around them
 			
 			importableTitlings.put(titlingName, e);
 		}
