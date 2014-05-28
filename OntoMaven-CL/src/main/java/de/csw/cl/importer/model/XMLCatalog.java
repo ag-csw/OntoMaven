@@ -34,21 +34,23 @@ public class XMLCatalog {
 	}
 	
 	public void write() {
-		Document catalogDocument = new Document();
-		catalogDocument.setDocType(new DocType("catalog",
-						"-//OASIS//DTD XML Catalogs V1.1//EN",
-						"http://www.oasis-open.org/committees/entity/release/1.1/catalog.dtd"));
-		Element root = new Element("catalog", XMLUtil.NS_CATALOG);
-		root.setAttribute("prefer", "public");
-		catalogDocument.setRootElement(root);
-		for (Entry<String, String> mapping : uriMappings.entrySet()) {
-			Element newElement = new Element("uri");
-			newElement.setAttribute("name", mapping.getKey());
-			newElement.setAttribute("uri", "includes/" + mapping.getValue()+ ".xml");
-			newElement.setNamespace(XMLUtil.NS_CATALOG);
-			catalogDocument.getRootElement().addContent(newElement);
-		}
-		XMLUtil.writeXML(catalogDocument, catalogFile);
+	    if (uriMappings.size() > 0) {
+    		Document catalogDocument = new Document();
+    		catalogDocument.setDocType(new DocType("catalog",
+    						"-//OASIS//DTD XML Catalogs V1.1//EN",
+    						"http://www.oasis-open.org/committees/entity/release/1.1/catalog.dtd"));
+    		Element root = new Element("catalog", XMLUtil.NS_CATALOG);
+    		root.setAttribute("prefer", "public");
+    		catalogDocument.setRootElement(root);
+    		for (Entry<String, String> mapping : uriMappings.entrySet()) {
+    			Element newElement = new Element("uri");
+    			newElement.setAttribute("name", mapping.getKey());
+    			newElement.setAttribute("uri", "includes/" + mapping.getValue()+ ".xml");
+    			newElement.setNamespace(XMLUtil.NS_CATALOG);
+    			catalogDocument.getRootElement().addContent(newElement);
+    		}
+    		XMLUtil.writeXML(catalogDocument, catalogFile);
+	    }
 	}
 	
 	public static void main(String[] args) {
