@@ -5,6 +5,13 @@
     <Name cri="http://example.org/caseN/myDomain-N2"/>
     <Restrict>
       <Name cri="http://example.org/caseN/myDomain-N1"/>
+      <xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseN%2FmyText-N1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseN%2FmyDomain-N1" parse="xml"/>
+    </Restrict>
+  </Restrict>
+  <Restrict>
+    <Name cri="http://example.org/caseN/myDomain-N2"/>
+    <Restrict>
+      <Name cri="http://example.org/caseN/myDomain-N1"/>
       <xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseN%2FmyText-N1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseN%2FmyDomain-N1;dom2=http%3A%2F%2Fexample.org%2FcaseN%2FmyDomain-N2" parse="xml"/>
     </Restrict>
   </Restrict>
