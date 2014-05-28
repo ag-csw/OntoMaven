@@ -10,13 +10,18 @@ import java.io.FilenameFilter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.SortedSet;
 import java.util.Stack;
+import java.util.TreeSet;
 
+import org.jdom2.Content;
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.jdom2.Parent;
 
 import util.XMLUtil;
 import de.csw.cl.importer.model.ConflictingTitlingException;
@@ -32,7 +37,6 @@ public class CLImportationAlgorithm {
 	
 	private enum ELEMENT_TYPE {Titling, Restrict, Import, include, other}
 	
-	private File inputFile;
 	private File baseDir;
 	
 	private File resultDir;
@@ -45,6 +49,7 @@ public class CLImportationAlgorithm {
 	// not used for now
 	private final Queue<Element> potentiallyPendingImports = new LinkedList<Element>();
 
+	private HashSet<Element> visitedElements;
 	
 	/**
 	 * Constructs a {@link CLImportationAlgorithm} object initialized with a given base file.
@@ -56,10 +61,9 @@ public class CLImportationAlgorithm {
 	 * </ul>
 	 * @param inputFile
 	 */
-	public CLImportationAlgorithm(File inputFile) {
-		this.inputFile = inputFile;
+	public CLImportationAlgorithm(File corpusDirectory) {
 
-		baseDir = inputFile.getParentFile();
+		baseDir = corpusDirectory;
 		resultDir = new File(baseDir.getParentFile(), "test-result");
 		includesDir = new File(resultDir, "includes");
 
@@ -89,7 +93,12 @@ public class CLImportationAlgorithm {
 		
 		processImports();
 		
-		XMLUtil.writeXML(corpus.getBaseDocument(), new File(resultDir, inputFile.getName().replaceAll("myText", "resultText")));
+		Iterable<Document> documentsInCorpus = corpus.getDocuments();
+
+		for (Document document : documentsInCorpus) {
+			XMLUtil.writeXML(document, new File(resultDir, corpus.getOriginalFile(document).getName().replaceAll("myText", "resultText")));
+		}
+		
 		catalog.write();
 		includes.writeIncludes();
 	}
@@ -99,18 +108,17 @@ public class CLImportationAlgorithm {
 	 * @throws ConflictingTitlingException
 	 */
 	private void loadCorpus() throws ConflictingTitlingException {
-		Document baseDocument = XMLUtil.readLocalDoc(inputFile);
-		corpus = new Corpus(baseDocument);
+		corpus = new Corpus();
 		
 		File[] files = baseDir.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
-				return name.toLowerCase().endsWith(".xcl") && !name.equals(inputFile.getName());
+				return name.toLowerCase().endsWith(".xcl");
 			}
 		});
 		
 		for (File file : files) {
 			Document doc = XMLUtil.readLocalDoc(file);
-			corpus.addDocument(doc);
+			corpus.addDocument(doc, file);
 		}
 	}
 	
@@ -120,23 +128,31 @@ public class CLImportationAlgorithm {
 	 * only unasserted import directives (nested in titlings) are available.
 	 */
 	private void processImports() {
+
+		Iterable<Document> documentsInCorpus = corpus.getDocuments();
+		
 		while(true) {
 			// repeat until a complete traversal does not yield any new import
 			// resolutions.
 			// TODO: possible performance optimization: remember unexecutable imports hidden in titled texts and process them without having to traverse the whole corpus again.
 			List<ElementPair> pendingReplacements = new LinkedList<CLImportationAlgorithm.ElementPair>(); 
-					
-			processImport(corpus.getBaseDocument().getRootElement(), new Stack<String>(), new Stack<String>(), pendingReplacements);
+			
+			for (Document document : documentsInCorpus) {
+				visitedElements = new HashSet<Element>();
+				processImport(document.getRootElement(), new Stack<String>(), new Stack<String>(), pendingReplacements);
+			}
 			
 			// done
 			if (pendingReplacements.isEmpty())
 				break;
 			
 			for (ElementPair pair : pendingReplacements) {
-				Element parent = pair.original.getParentElement();
+				Parent parent = pair.original.getParent();
 				int position = parent.indexOf(pair.original);
 				pair.original.detach();
-				parent.addContent(position, pair.replacement);
+				if (pair.replacement != null) {
+					parent.addContent(position, pair.replacement);
+				}
 			}
 			
 
@@ -149,6 +165,11 @@ public class CLImportationAlgorithm {
 	 * @return True if an import has been executed, false otherwise
 	 */
 	private void processImport(Element e, Stack<String> importHistory, Stack<String> restrictHistory, List<ElementPair> pendingReplacements) {
+		
+		if (visitedElements.contains(e)) {
+			return;
+		}
+		visitedElements.add(e);
 		
 		ELEMENT_TYPE elementType = null;
 		try {
@@ -168,7 +189,16 @@ public class CLImportationAlgorithm {
 					// Otherwise: we have a matching titling. Replace the Import element with the contents of the Titling element.				
 					Element newXincludeElement = executeImport(e, titling, importHistory, restrictHistory);
 					
+					
 					pendingReplacements.add(new ElementPair(e, newXincludeElement));
+					
+					if (newXincludeElement == null) {
+						// cyclic import
+						System.out.println("*** Circle: removing " + e);
+						return;
+					}
+					
+					System.out.println("*** Replacing " + e + " with " + newXincludeElement);
 					
 					if (newXincludeElement != null) {
 						List<Element> children = newXincludeElement.getChildren();
@@ -181,10 +211,19 @@ public class CLImportationAlgorithm {
 				return;
 			case include:
 				String xincludeHref = e.getAttributeValue("href");
-//				importHistory.push(xincludeHref);
+				importHistory.push(xincludeHref);
 				String fileHash = catalog.getFileHash(xincludeHref);
 				Element referencedInclude = includes.getInclude(fileHash, null);
-				processImport(referencedInclude, importHistory, restrictHistory, pendingReplacements);
+				
+				// the refereced include root element is supposed to be a Titling
+				if (!referencedInclude.getName().equals("Titling")) {
+					System.err.println("Include " + xincludeHref + ": Root is not a Titling");
+				}
+				
+				List<Element> children = referencedInclude.getChildren();
+				for (Element child : children) {
+					processImport(child, importHistory, restrictHistory, pendingReplacements);
+				}
 				break;
 			case Restrict:
 				restrictHistory.add(getName(e));
@@ -207,7 +246,7 @@ public class CLImportationAlgorithm {
 		switch(elementType) {
 			case Import:
 			case include:
-//				importHistory.pop();
+				importHistory.pop();
 				break;
 			case Restrict:
 				restrictHistory.pop();
@@ -275,7 +314,11 @@ public class CLImportationAlgorithm {
 	private String getRestrictionFragment(Stack<String> restrictHistory) {
 		StringBuilder buf = new StringBuilder();
 		int domainCounter = 1;
-		for (String restrictName : restrictHistory) {
+		
+		TreeSet<String> restrictHistoryNormalized = new TreeSet<String>(restrictHistory);
+		
+		for (String restrictName : restrictHistoryNormalized) {
+			
 			buf.append(";dom");
 			buf.append(domainCounter++);
 			buf.append('=');
@@ -285,6 +328,7 @@ public class CLImportationAlgorithm {
 				e.printStackTrace();
 			}
 		}
+		
 		return buf.toString();
 	}
 	
