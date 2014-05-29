@@ -78,12 +78,6 @@ public class CLImportationAlgorithm {
 	 * @throws FolderCreationException 
 	 */
 	public void run() throws ConflictingTitlingException, FolderCreationException {
-		if (!(resultDir.exists() || resultDir.mkdir())) {
-			throw new FolderCreationException("Error creating directory " + resultDir.getAbsolutePath());
-		}
-		if (!(includesDir.exists() || includesDir.mkdir())) {
-			throw new FolderCreationException("Error creating directory " + includesDir.getAbsolutePath());
-		}
 		
 		try {
 			loadCorpus();
