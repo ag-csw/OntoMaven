@@ -7,22 +7,12 @@ import static util.XMLUtil.NS_XCL2;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.SortedSet;
 import java.util.Stack;
 import java.util.TreeSet;
 
@@ -140,8 +130,9 @@ public class CLImportationAlgorithm {
 	 * Processes all import directives in a depth-first fashion, starting at the
 	 * root of the document. Repeats until all imports have been resolved or
 	 * only unasserted import directives (nested in titlings) are available.
+	 * @throws ConflictingTitlingException 
 	 */
-	private void processImports() {
+	private void processImports() throws ConflictingTitlingException {
 
 		//Iterable<Document> documentsInCorpus = corpus.getDocuments();
 	    importHistory = new Stack<String>();
@@ -179,8 +170,9 @@ public class CLImportationAlgorithm {
 	 * 
 	 * @param e an Import element
 	 * @return True if an import has been executed, false otherwise
+	 * @throws ConflictingTitlingException 
 	 */
-	private void processImport(Element e,  Stack<String> includeHistory, Stack<String> restrictHistory,  List<ElementPair> pendingReplacements) {
+	private void processImport(Element e,  Stack<String> includeHistory, Stack<String> restrictHistory,  List<ElementPair> pendingReplacements) throws ConflictingTitlingException {
 		
 		/*if (visitedElements.contains(e)) {
 			return;
@@ -293,8 +285,9 @@ public class CLImportationAlgorithm {
 	 * @param titledElement
 	 * @param restrictHistory
 	 * @return the new xml include element or null if a cyclic import was detected. 
+	 * @throws ConflictingTitlingException 
 	 */
-	private Element executeImport(Element importElement, Element titledElement, Stack<String> restrictHistory) {
+	private Element executeImport(Element importElement, Element titledElement, Stack<String> restrictHistory) throws ConflictingTitlingException {
 		String titlingName = getName(importElement);
 		
 		String includeURI = getXincludeURI(titlingName, restrictHistory);
@@ -322,6 +315,8 @@ public class CLImportationAlgorithm {
 		// put the content of the titled text into a separate file
 		titledElement = includes.getInclude(hashCode, titledElement.clone());
 		System.out.println("Number of Includes: " + includeNumber.toString());
+		
+		corpus.extractTitlings(titledElement);
 		
 		// add a mapping to the xml catalog
 		// TODO: hashCode needs to be different for each includeURI 

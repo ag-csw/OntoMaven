@@ -63,7 +63,10 @@ public class Includes {
 				newRootElement.detach();
 			} else {
 				Element constructElement = new Element("Construct", XMLUtil.NS_XCL2);
-				constructElement.addContent(children);
+				for (Element child : children) {
+					child.detach();
+					constructElement.addContent(child);
+				}
 				newRootElement = constructElement;
 			}
 			

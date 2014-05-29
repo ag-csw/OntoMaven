@@ -173,9 +173,9 @@ public class ClImportTest extends TestCase {
 			}
 		} catch (Throwable t) {
 			if (expectedThrowable == null || !expectedThrowable.isAssignableFrom(t.getClass())) {
-				System.err.println("Unexpected exceeption : " + t.getLocalizedMessage());
+				System.err.println("Unexpected exception : " + t.getLocalizedMessage());
 				t.printStackTrace();
-				fail("Unexpected exceeption : " + t.getLocalizedMessage());
+				fail("Unexpected exception : " + t.getLocalizedMessage());
 			}
 		}
 		

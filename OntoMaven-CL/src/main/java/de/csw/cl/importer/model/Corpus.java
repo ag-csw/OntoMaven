@@ -104,7 +104,7 @@ public class Corpus {
 	 * @param e
 	 * @throws ConflictingTitlingException 
 	 */
-	private void extractTitlings(Element e) throws ConflictingTitlingException {
+	public void extractTitlings(Element e) throws ConflictingTitlingException {
 		List<Element> childElements = e.getChildren();
 		for (Element element : childElements) {
 			if (element.getName().equals("Titling")) {
