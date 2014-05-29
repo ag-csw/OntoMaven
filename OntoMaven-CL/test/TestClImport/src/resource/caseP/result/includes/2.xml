@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
    <!--<xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseD%2FmyText-D1%23a" parse="xml"/>-->
-<Restrict  xmlns="http://iso-commonlogic.org/xcl2" xmlns:xi="http://www.w3.org/2001/XInclude">
+<Restrict  xmlns="http://iso-commonlogic.org/xcl2">
   <Name cri="http://example.org/caseP/myDomain-P1"/>
   <Construct>
+    <Construct>
     <!--<xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseP%2FmyText-P1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseP%2FmyDomain-P1" parse="xml"/>-->
+    </Construct>
     <Atom><Name>P</Name><Name>a</Name></Atom>    
   </Construct>
 </Restrict>

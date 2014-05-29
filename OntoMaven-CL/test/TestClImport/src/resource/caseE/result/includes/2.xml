@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Construct xmlns="http://iso-commonlogic.org/xcl2">
+  <Construct>
    <!--<xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseE%2FmyText-E1%23a" parse="xml"/>-->
+  </Construct>
   <Atom><Name>R</Name><Name>c</Name></Atom>
 </Construct>
