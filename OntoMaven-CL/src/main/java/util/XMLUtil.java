@@ -18,14 +18,18 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 import org.jdom2.Attribute;
+import org.jdom2.Content;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.Namespace;
 import org.jdom2.input.SAXBuilder;
+import org.jdom2.input.sax.SAXHandlerFactory;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
+import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import de.csw.cl.importer.MainForMaven;
 
@@ -81,9 +85,10 @@ public class XMLUtil {
 		
 		// Jing handles validation of xmlns attributes incorrectly. Therefore, we use a non-validating parser.
 		SAX_PARSER = new SAXBuilder();
+		SAX_PARSER.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
 		
 		// Initialize XML outputter
-		XML_OUT = new XMLOutputter(Format.getCompactFormat());
+		XML_OUT = new XMLOutputter(Format.getCompactFormat().setExpandEmptyElements(true).setOmitDeclaration(true));
 
 	}
 	
@@ -184,7 +189,8 @@ public class XMLUtil {
 	private static String getCanonicalXML(String xmlString) {
 		Canonicalizer canon = null;
 		try {
-			canon = Canonicalizer.getInstance(Canonicalizer.ALGO_ID_C14N_OMIT_COMMENTS);
+			canon = Canonicalizer.getInstance(Canonicalizer.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
+			
 		} catch (InvalidCanonicalizerException e1) {
 			e1.printStackTrace();
 		}
@@ -286,9 +292,17 @@ public class XMLUtil {
 	public static void main(String[] args) {
 		Document doc;
 		try {
-			doc = SAX_PARSER.build(new File("/Users/ralph/dev/git/Local Git Repository/OntoMaven/OntoMaven-CL/test/TestClImport/src/resource/caseL/input/myText-L1.xcl"));
-			Element e = doc.getRootElement().getChild("Titling", NS_XCL2);
-			System.out.println(getCanonicalXML(e));
+			doc = SAX_PARSER.build(new File("/tmp/1.xml"));
+//		Element e = doc.getRootElement().getChild("Titling", NS_XCL2);
+//			System.out.println(getCanonicalXML(e));
+			Iterable<Content> contents = doc.getDescendants();
+			for (Content content : contents) {
+				if (content instanceof Element) {
+					((Element)content).removeNamespaceDeclaration(((Element) content).getNamespace());
+				}
+			}
+			
+			System.out.println(getCanonicalXML(doc));
 		} catch (JDOMException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
