@@ -237,7 +237,10 @@ public class ClImportTest extends TestCase {
 
         if(!(expectedIncludeFiles == null)) {
     		for (File includeFile : expectedIncludeFiles) {
-    			expectedIncludeFileContents.add(XMLUtil.getCanonicalXML(XMLUtil.readLocalDoc(includeFile)));
+    			String canonicalXML = XMLUtil.getCanonicalXML(XMLUtil.readLocalDoc(includeFile));
+    			expectedIncludeFileContents.add(canonicalXML);
+    			
+    			System.out.println("\n -- " + includeFile.getAbsolutePath() + " -->\n\n" + canonicalXML + "\n------------\n\n");
     		}
         }
 		
@@ -245,9 +248,12 @@ public class ClImportTest extends TestCase {
 		
         if(!(testResultIncludeFiles == null)) {
     		for (File includeFile : testResultIncludeFiles) {
-    			if (!expectedIncludeFileContents.contains(XMLUtil.getCanonicalXML(XMLUtil.readLocalDoc(includeFile)))) {
+    			String canonicalXML = XMLUtil.getCanonicalXML(XMLUtil.readLocalDoc(includeFile));
+    			if (!expectedIncludeFileContents.contains(canonicalXML)) {
     				unmatchedFiles.add(includeFile.getName());
     			}
+    			
+    			System.out.println("\n -- " + includeFile.getAbsolutePath() + " -->\n\n" + canonicalXML + "\n------------\n\n");
     		}
         }
 

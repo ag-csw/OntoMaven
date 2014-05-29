@@ -197,7 +197,6 @@ public class CLImportationAlgorithm {
 					// Otherwise: we have a matching titling. Replace the Import element with the contents of the Titling element.				
 					Element newXincludeElement = executeImport(e, titling, restrictHistory);
 					
-					
 					pendingReplacements.add(new ElementPair(e, newXincludeElement));
 					
 					if (!isXInclude(newXincludeElement)) {
@@ -208,9 +207,10 @@ public class CLImportationAlgorithm {
     					
 				    System.out.println("*** Replacing " + e + " with " + newXincludeElement);
 				
-					List<Element> children = newXincludeElement.getChildren();
+					Element includeReference = includes.getInclude(new Integer(includeNumber - 1).toString(), null);
+
+					List<Element> children = includeReference.getChildren();
 					for (Element child : children) {
-						// importProcessed is true because we have just performed an import
 						processImport(child, includeHistory, restrictHistory, pendingReplacements);
 					}
 				}
