@@ -137,7 +137,7 @@ public class Corpus {
 		} else {
 			System.out.println("  Adding titling " + titlingName);
 			
-			importableTitlings.put(titlingName, e);
+			importableTitlings.put(titlingName, e.clone());
 		}
 	}
 	
