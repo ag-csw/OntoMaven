@@ -7,9 +7,17 @@ import static util.XMLUtil.NS_XCL2;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -93,7 +101,37 @@ public class CLImportationAlgorithm {
 		//Iterable<Document> documentsInCorpus = corpus.getDocuments();
 		
 		if (corpus.size() > 0) {
-	        if (!(resultDir.exists() || resultDir.mkdir())) {
+			try {
+				Files.walkFileTree(resultDir.toPath(), new FileVisitor<Path>() {
+
+					public FileVisitResult preVisitDirectory(Path dir,
+							BasicFileAttributes attrs) throws IOException {
+						return FileVisitResult.CONTINUE;
+					}
+
+					public FileVisitResult visitFile(Path file,
+							BasicFileAttributes attrs) throws IOException {
+						Files.delete(file);
+						return FileVisitResult.CONTINUE;
+					}
+
+					public FileVisitResult visitFileFailed(Path file,
+							IOException exc) throws IOException {
+						return FileVisitResult.CONTINUE;
+					}
+
+					public FileVisitResult postVisitDirectory(Path dir,
+							IOException exc) throws IOException {
+						Files.delete(dir);
+						return FileVisitResult.CONTINUE;
+					}
+				});
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+	        if (!resultDir.mkdir()) {
 	            throw new FolderCreationException("Error creating directory " + resultDir.getAbsolutePath());
 	        }
 	        for (Document document : corpus.getDocuments()) {
