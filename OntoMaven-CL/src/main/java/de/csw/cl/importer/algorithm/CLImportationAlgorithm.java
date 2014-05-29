@@ -52,6 +52,8 @@ public class CLImportationAlgorithm {
 
 	private Stack<String> importHistory;
 	
+	private Integer includeNumber = 0;
+	
 	/**
 	 * Constructs a {@link CLImportationAlgorithm} object initialized with a given base file.
 	 * If the base file resides in directory inputDir, the following file layout will be used:
@@ -306,12 +308,16 @@ public class CLImportationAlgorithm {
         xincludeElement.setAttribute("href", includeURI);
         xincludeElement.setAttribute("parse", "xml");
 
-		String hashCode = XMLUtil.getMD5Hash(titledElement);
+		//String hashCode = XMLUtil.getMD5Hash(titledElement);
+        String hashCode = (includeNumber++).toString();
 		
 		// put the content of the titled text into a separate file
-		titledElement = includes.getInclude(hashCode, titledElement);
+		titledElement = includes.getInclude(hashCode, titledElement.clone());
+		System.out.println("Number of Includes: " + includeNumber.toString());
 		
 		// add a mapping to the xml catalog
+		// TODO: hashCode needs to be different for each includeURI 
+		// if titledElement has Import or include elements in it.
 		catalog.addMapping(includeURI, hashCode);
 		
 		importHistory.push(includeURI);
