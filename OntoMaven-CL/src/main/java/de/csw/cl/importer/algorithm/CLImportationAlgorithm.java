@@ -95,13 +95,22 @@ public class CLImportationAlgorithm {
 		processImports();
 		
 		Iterable<Document> documentsInCorpus = corpus.getDocuments();
-
-		for (Document document : documentsInCorpus) {
-			XMLUtil.writeXML(document, new File(resultDir, corpus.getOriginalFile(document).getName().replaceAll("myText", "resultText")));
-		}
 		
-		catalog.write();
-		includes.writeIncludes();
+		if (corpus.size() > 0) {
+	        if (!(resultDir.exists() || resultDir.mkdir())) {
+	            throw new FolderCreationException("Error creating directory " + resultDir.getAbsolutePath());
+	        }
+	        for (Document document : documentsInCorpus) {
+	            XMLUtil.writeXML(document, new File(resultDir, corpus.getOriginalFile(document).getName().replaceAll("myText", "resultText")));
+	        }
+	        catalog.write();
+	        if (includes.size() > 0) {
+	            if (!(includesDir.exists() || includesDir.mkdir())) {
+	                throw new FolderCreationException("Error creating directory " + includesDir.getAbsolutePath());
+	            }
+	            includes.writeIncludes();
+	        }
+        }
 	}
 	
 	/**
@@ -194,8 +203,8 @@ public class CLImportationAlgorithm {
 					pendingReplacements.add(new ElementPair(e, newXincludeElement));
 					
 					if (!isXInclude(newXincludeElement)) {
-						// cyclic import
-    						System.out.println("*** Circle: removing " + e);
+						// duplicate import
+    						System.out.println("*** Duplicate: removing " + e);
     						return;
 					}		
     					
@@ -370,7 +379,7 @@ public class CLImportationAlgorithm {
    private boolean isXInclude(Content e) {
        switch(e.getCType()) {
            case Element : 
-               return ((Element) e).getName().equals("xinclude");
+               return ((Element) e).getName().equals("include");
            default:
                return false;
        }
