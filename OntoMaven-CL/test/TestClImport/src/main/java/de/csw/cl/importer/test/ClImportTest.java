@@ -10,15 +10,10 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
-import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
-import net.sf.saxon.expr.DifferenceEnumeration;
-import net.sf.saxon.expr.PairIterator;
 
 import org.jdom2.Document;
 import org.jdom2.output.XMLOutputter;
@@ -256,12 +251,16 @@ public class ClImportTest extends TestCase {
     		}
         }
 
-		StringBuilder buf = new StringBuilder("Unmatched include files:\n");
-		
-		for (String fileName : unmatchedFiles) {
-			buf.append("includes/" + fileName);
-			buf.append('\n');
-		}
+        if (!unmatchedFiles.isEmpty()) {
+			StringBuilder buf = new StringBuilder("Unmatched include files:\n");
+			
+			for (String fileName : unmatchedFiles) {
+				buf.append("includes/" + fileName);
+				buf.append('\n');
+			}
+			
+			fail(buf.toString());
+        }
 	}
 	
 	
