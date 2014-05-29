@@ -95,6 +95,11 @@ public class CLImportationAlgorithm {
 	            throw new FolderCreationException("Error creating directory " + resultDir.getAbsolutePath());
 	        }
 	        for (Document document : corpus.getDocuments()) {
+	        	XMLUtil.performRecursivelAction(document.getRootElement(), new XMLUtil.Action() {
+					public void doAction(Element e) {
+						e.removeAttribute("key");
+					}
+				});
 	            XMLUtil.writeXML(document, new File(resultDir, corpus.getOriginalFile(document).getName().replaceAll("myText", "resultText")));
 	        }
 	        catalog.write();
@@ -207,12 +212,13 @@ public class CLImportationAlgorithm {
     					
 				    System.out.println("*** Replacing " + e + " with " + newXincludeElement);
 				
-					Element includeReference = includes.getInclude(new Integer(includeNumber - 1).toString(), null);
+					Element includeReference = includes.getInclude(includeNumber.toString(), null);
 
 					List<Element> children = includeReference.getChildren();
 					for (Element child : children) {
 						processImport(child, includeHistory, restrictHistory, pendingReplacements);
 					}
+					importHistory.pop();
 				}
 				return;
 			case include:
@@ -310,7 +316,7 @@ public class CLImportationAlgorithm {
         xincludeElement.setAttribute("parse", "xml");
 
 		//String hashCode = XMLUtil.getMD5Hash(titledElement);
-        String hashCode = (includeNumber++).toString();
+        String hashCode = (++includeNumber).toString();
 		
 		// put the content of the titled text into a separate file
 		titledElement = includes.getInclude(hashCode, titledElement.clone());
@@ -432,6 +438,18 @@ public class CLImportationAlgorithm {
 		
 		Element original;
 		Element replacement;
+		
+		@Override
+		public boolean equals(Object obj) {
+			return (obj instanceof ElementPair) &&
+					((ElementPair)obj).original == original && 
+					((ElementPair)obj).replacement == replacement;
+		}
+		
+		@Override
+		public int hashCode() {
+			return original.hashCode() + replacement.hashCode();
+		}
 	}
 	
 }

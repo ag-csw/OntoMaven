@@ -174,11 +174,11 @@ public class XMLUtil {
 		return getCanonicalXML(contentAsString);
 	}
 	
-	private static interface Action {
+	public static interface Action {
 		public void doAction(Element e);
 	}
 	
-	private static void performRecursivelAction(Element e, Action action) {
+	public static void performRecursivelAction(Element e, Action action) {
 		action.doAction(e);
 		List<Element> children = e.getChildren();
 		for (Element child : children) {
