@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
+<Construct xmlns="http://iso-commonlogic.org/xcl2">
+  <Titling>
+    <Name cri="http://example.org/caseM/myText-M3#a"/>
+    <Construct>
+      <Atom><Name>P</Name><Name cri="http://example.org#a"/></Atom>
+    </Construct>
+  </Titling>  
+  <Titling>
+    <!-- This version of the titling has newlines. -->
+    <Name cri="http://example.org/caseM/myText-M3#a"/>
+    <Construct>
+      <Atom>
+        <Name>P</Name>
+        <Name cri="http://example.org#a"/>
+      </Atom>
+    </Construct>
+  </Titling>  
+</Construct>
