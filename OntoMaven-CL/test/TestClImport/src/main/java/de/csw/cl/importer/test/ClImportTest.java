@@ -4,18 +4,31 @@
 package de.csw.cl.importer.test;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
+import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
+import net.sf.saxon.expr.DifferenceEnumeration;
+import net.sf.saxon.expr.PairIterator;
 
-import org.junit.Before;
+import org.jdom2.Document;
+import org.jdom2.output.XMLOutputter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import util.XMLUtil;
 import de.csw.cl.importer.algorithm.CLImportationAlgorithm;
 import de.csw.cl.importer.model.ConflictingTitlingException;
 
@@ -26,21 +39,35 @@ import de.csw.cl.importer.model.ConflictingTitlingException;
 @RunWith(value = Parameterized.class)
 public class ClImportTest extends TestCase {
 	
-	private static File baseDir;
+	private static File testBaseDir;
+	private static File expectedResultBaseDir;
 	
 	
 	@BeforeClass
 	public static void setup() {
 		String baseDirPath = System.getProperty("baseDir");
+		String expectedResultsDirPath = System.getProperty("expectedResultBaseDir");
+
 		if (baseDirPath == null) {
-			System.err.println("Please pass the path to the base directory (the directory containing all 'caseX' directories as a system property (VM argument in eclipse) -DbaseDir=<path to base directory>.)");
+			System.err.println("Please pass the path to the base directory (the directory containing all 'caseX' directories as a system property (VM argument in eclipse) -DbaseDir=<path to base directory>). For comparison with the expected results, please specify the 'expectedResultBaseDir' parameter (-expectedResultBaseDir=<path to examples directory>)");
 			System.exit(-1);
 		}
-		baseDir = new File(baseDirPath);
+		testBaseDir = new File(baseDirPath);
+		
+		if (expectedResultsDirPath == null) {
+			expectedResultBaseDir = testBaseDir;
+		} else {
+			expectedResultBaseDir = new File(expectedResultsDirPath);
+		}
+		
+
 	}
 
 	@Parameters
 	public static Iterable<Object[]> data() {
+		
+		// { { "case directory name"}, { <expected exception type> or null } }, ...
+		
 		Object[][] data = new Object[][] {
 			   { "caseA", null },
 			   { "caseB", null },
@@ -61,7 +88,7 @@ public class ClImportTest extends TestCase {
 		return Arrays.asList(data);
 	}
 	
-	private String caseDirName;
+	private static String caseDirName;
 	private Class<Throwable> expectedThrowable;
 	
 	public ClImportTest(String caseDirName, Class<Throwable> expectedThrowable) {
@@ -69,7 +96,7 @@ public class ClImportTest extends TestCase {
 			System.err.println("Please pass the path to the base directory (the directory containing all 'caseX' directories as an argument.)");
 			System.exit(-1);
 		}
-		this.caseDirName = caseDirName;
+		ClImportTest.caseDirName = caseDirName;
 		this.expectedThrowable = expectedThrowable;
 	}
 	
@@ -80,21 +107,27 @@ public class ClImportTest extends TestCase {
 	 */
 	@Test
 	public void testAll() {
-		File caseDir = new File(baseDir, caseDirName);
-		File inputDir = new File(caseDir, "input");
+		File testCaseDir = new File(testBaseDir, caseDirName); // the directory for this test case ("<baseDir>/caseX")
+		File testInputDir = new File(testCaseDir, "input"); // the directory containing the input corpus ("<baseDir>/caseX/input")
+		File testResultDir = new File(testCaseDir, "test-result"); // the directory containing the expected output ("<expectedResultBaseDir>/caseX/test-result")
 		
 		
-		boolean fail = false;
-		
+		File expectedResultDir = new File(new File(expectedResultBaseDir, (caseDirName)), "result");
+
+		// hard-coded exception
+		if(caseDirName.equals("caseF")) {
+			expectedResultDir = new File(new File(expectedResultBaseDir, (caseDirName)), "result2");
+		}
+
 		// run algorithm on folder and fail if an inexpected exception is caught
 			
-		CLImportationAlgorithm algo = new CLImportationAlgorithm(inputDir);
+		CLImportationAlgorithm algo = new CLImportationAlgorithm(testInputDir);
 		
 		try {
 			algo.run();
 			if (expectedThrowable != null ) {
 				System.err.println("Exception of type " + expectedThrowable.getCanonicalName() + " expected, but none has been thrown.");
-				fail = true;
+				fail("Exception of type " + expectedThrowable.getCanonicalName() + " expected, but none has been thrown.");
 			}
 		} catch (ConflictingTitlingException e) {
 			if (expectedThrowable != null && expectedThrowable.isAssignableFrom(ConflictingTitlingException.class)) {
@@ -102,24 +135,161 @@ public class ClImportTest extends TestCase {
 								+ e.getName() + ".");
 			} else {
 				System.err.println("Unexpected conflicting titlings with name " + e.getName());
-				fail = true;
+				fail("Unexpected conflicting titlings with name " + e.getName());
 			}
 		} catch (Throwable t) {
 			if (expectedThrowable == null || !expectedThrowable.isAssignableFrom(t.getClass())) {
 				System.err.println("Unexpected exceeption : " + t.getLocalizedMessage());
 				t.printStackTrace();
-				fail = true;
+				fail("Unexpected exceeption : " + t.getLocalizedMessage());
 			}
 		}
 		
-		if (fail)
-			fail();
+		// Check for missing/unexpected files
 		
-		// TODO compare files
+		if (!expectedResultDir.exists() && testResultDir.exists()) {
+			fail("No results directory should have been created.");
+		}
 		
+		String[] expectedFileNames = expectedResultDir.list(systemFileNameFilter);
+		String[] testResultFileNames = testResultDir.list(systemFileNameFilter);
 		
+		File expectedIncludesDir = new File(expectedResultDir, "includes");
+		File testResultIncludesDir = new File(testResultDir, "includes");
+
+//		String[] expectedIncludeFileNames = expectedIncludesDir.list();
+//		String[] testResultIncludeFileNames = testResultIncludesDir.list();
+		
+		if (!Arrays.equals(testResultFileNames, expectedFileNames)
+//				|| !Arrays.equals(testResultIncludeFileNames, expectedIncludeFileNames)
+				) {
+			// let's take a closer look
+
+			ArrayList<String> missingFiles = new ArrayList<String>(); 
+			ArrayList<String> unexpecedFiles = new ArrayList<String>();
+
+			List<String> expectedFileNameList = Arrays.asList(expectedFileNames);
+			List<String> testResultFileNameList = Arrays.asList(testResultFileNames);
+			
+//			List<String> expectedIncludeFileNameList = Arrays.asList(expectedIncludeFileNames);
+//			List<String> testResultIncludeFileNameList = Arrays.asList(testResultIncludeFileNames);
+			
+			listDiff(testResultFileNameList, expectedFileNameList, missingFiles, unexpecedFiles, "");
+//			listDiff(testResultIncludeFileNameList, expectedIncludeFileNameList, missingFiles, unexpecedFiles, "includes/");
+			
+			StringBuilder buf = new StringBuilder("Files are missing and/or unexpected files were created\n");
+			
+			if (!unexpecedFiles.isEmpty()) {
+				buf.append("Unexpected:\n");
+				for (String fileName : unexpecedFiles) {
+					buf.append(fileName);
+					buf.append('\n');
+				}
+			}
+			
+			if (!missingFiles.isEmpty()) {
+				buf.append("Missing:\n");
+				for (String fileName : missingFiles) {
+					buf.append(fileName);
+					buf.append('\n');
+				}
+			}
+			
+			fail(buf.toString());
+		}
+		
+		// compare files in the result directory
+		
+		File[] testResultFiles = expectedResultDir.listFiles(new FileFilter() {
+			
+			public boolean accept(File file) {
+				return file.isFile() &&
+						(file.getName().toLowerCase().endsWith(".xml") ||
+								file.getName().toLowerCase().endsWith(".xcl"));
+			}
+		});
+		
+		for (File testResultFile : testResultFiles) {
+			if (testResultFile.isFile()) {
+				
+				File expectedFile = new File(expectedResultDir, testResultFile.getName());
+				Document expectedDocument = XMLUtil.readLocalDoc(expectedFile);
+				Document testResultDocument = XMLUtil.readLocalDoc(testResultFile);
+				if (!XMLUtil.getCanonicalXML(testResultDocument).equals(XMLUtil.getCanonicalXML(expectedDocument))) {
+					XMLOutputter xmlOutputter = new XMLOutputter();
+					
+					StringWriter out = new StringWriter();
+					try {
+						xmlOutputter.output(testResultDocument, out);
+					} catch (IOException e) {
+						fail();
+					}
+					
+					fail("Content not as expected in " + testResultFile.getName() + "\n\n" + out.toString());
+				}
+			}
+		}
+		
+		// ... and now in the includes directory
+		// Note: We cannot perform a comparison of file names since included files are named based on the hash code over their content, while in the test cases, they are named 1.xml, 2.xml, etc.
+		
+		File[] testResultIncludeFiles = testResultIncludesDir.listFiles(systemFileNameFilter);
+		File[] expectedIncludeFiles = expectedIncludesDir.listFiles(systemFileNameFilter);
+		
+		HashSet<String> expectedIncludeFileContents = new HashSet<String>();
+
+		for (File includeFile : expectedIncludeFiles) {
+			expectedIncludeFileContents.add(XMLUtil.getCanonicalXML(XMLUtil.readLocalDoc(includeFile)));
+		}
+		
+		ArrayList<String> unmatchedFiles = new ArrayList<String>();
+		
+		for (File includeFile : testResultIncludeFiles) {
+			if (!expectedIncludeFileContents.contains(XMLUtil.getCanonicalXML(XMLUtil.readLocalDoc(includeFile)))) {
+				unmatchedFiles.add(includeFile.getName());
+			}
+		}
+
+		StringBuilder buf = new StringBuilder("Unmatched include files:\n");
+		
+		for (String fileName : unmatchedFiles) {
+			buf.append("includes/" + fileName);
+			buf.append('\n');
+		}
 	}
 	
 	
+	/**
+	 * Compares a given list with a list of expected objects and adds any missing or unexpected entries to the missingEntries and unexpectedEntries lists.
+	 * @param testList the list 
+	 * @param expectedList
+	 * @param missingEntries
+	 * @param unexpectedEntries
+	 */
+	private void listDiff(List<String> testList, List<String> expectedList, List<String> missingEntries, List<String> unexpectedEntries, String prefix) {
 
+		for (String entry : expectedList) {
+			if (!testList.contains(entry)) {
+				missingEntries.add(prefix + entry);
+			}
+		}
+
+		for (String entry : testList) {
+			if (!expectedList.contains(entry)) {
+				unexpectedEntries.add(prefix + entry);
+			}
+		}
+	}
+	
+	
+    public static void fail(String message) {
+    	TestCase.fail(caseDirName + ": " + message);
+    }
+    
+    private FilenameFilter systemFileNameFilter = new FilenameFilter() {
+		
+		public boolean accept(File dir, String name) {
+			return !name.equals(".DS_Store");
+		}
+	};
 }
