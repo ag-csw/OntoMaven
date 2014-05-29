@@ -18,13 +18,10 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 import org.jdom2.Attribute;
-import org.jdom2.Content;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.Namespace;
-import org.jdom2.Parent;
-import org.jdom2.filter.Filter;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
@@ -84,7 +81,7 @@ public class XMLUtil {
 		
 		// Jing handles validation of xmlns attributes incorrectly. Therefore, we use a non-validating parser.
 		SAX_PARSER = new SAXBuilder();
-
+		
 		// Initialize XML outputter
 		XML_OUT = new XMLOutputter(Format.getCompactFormat());
 
