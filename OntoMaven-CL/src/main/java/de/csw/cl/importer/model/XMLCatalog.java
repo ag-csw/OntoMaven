@@ -38,7 +38,7 @@ public class XMLCatalog {
     		Document catalogDocument = new Document();
     		catalogDocument.setDocType(new DocType("catalog",
     						"-//OASIS//DTD XML Catalogs V1.1//EN",
-    						"http://www.oasis-open.org/committees/entity/release/1.1/catalog.dtd"));
+    						"http://www.oasis-open.org/committees/entity/release/1.0/catalog.dtd"));
     		Element root = new Element("catalog", XMLUtil.NS_CATALOG);
     		root.setAttribute("prefer", "public");
     		catalogDocument.setRootElement(root);
