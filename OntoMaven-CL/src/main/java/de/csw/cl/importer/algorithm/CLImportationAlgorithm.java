@@ -90,7 +90,7 @@ public class CLImportationAlgorithm {
 		
 		//Iterable<Document> documentsInCorpus = corpus.getDocuments();
 		
-		if (corpus.size() > 0) {			
+		if (corpus.size() > 0) {		
 	        if (!resultDir.mkdir()) {
 	            throw new FolderCreationException("Error creating directory " + resultDir.getAbsolutePath());
 	        }
@@ -108,6 +108,13 @@ public class CLImportationAlgorithm {
 	                throw new FolderCreationException("Error creating directory " + includesDir.getAbsolutePath());
 	            }
 	            includes.writeIncludes();
+	        }
+	        List<String> unresolvedImports = getUnresolvedImports();
+	        if (!unresolvedImports.isEmpty()) {
+	        	System.out.println("Warning. There are unresolved importations:");
+	        	for (String unresolvedImport : unresolvedImports) {
+					System.out.println(unresolvedImport);
+				}
 	        }
         }
 	}
@@ -450,6 +457,21 @@ public class CLImportationAlgorithm {
 		public int hashCode() {
 			return original.hashCode() + replacement.hashCode();
 		}
+	}
+	
+	private LinkedList<String> getUnresolvedImports() {
+		final LinkedList<String> unresolvedImports = new LinkedList<String>();
+		Iterable<Document> documents = corpus.getDocuments();
+		for (Document document : documents) {
+			XMLUtil.performRecursivelAction(document.getRootElement(), new XMLUtil.Action() {
+				public void doAction(Element e) {
+					if (e.getName().equals("Import")) {
+						unresolvedImports.add(getName(e));
+					}
+				}
+			});
+		}
+		return unresolvedImports;
 	}
 	
 }
