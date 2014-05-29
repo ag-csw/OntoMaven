@@ -18,6 +18,7 @@ import java.util.SortedSet;
 import java.util.Stack;
 import java.util.TreeSet;
 
+import org.jdom2.Comment;
 import org.jdom2.Content;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -49,7 +50,7 @@ public class CLImportationAlgorithm {
 	// not used for now
 	private final Queue<Element> potentiallyPendingImports = new LinkedList<Element>();
 
-	private HashSet<Element> visitedElements;
+	private Stack<String> importHistory;
 	
 	/**
 	 * Constructs a {@link CLImportationAlgorithm} object initialized with a given base file.
@@ -77,12 +78,6 @@ public class CLImportationAlgorithm {
 	 * @throws FolderCreationException 
 	 */
 	public void run() throws ConflictingTitlingException, FolderCreationException {
-		if (!(resultDir.exists() || resultDir.mkdir())) {
-			throw new FolderCreationException("Error creating directory " + resultDir.getAbsolutePath());
-		}
-		if (!(includesDir.exists() || includesDir.mkdir())) {
-			throw new FolderCreationException("Error creating directory " + includesDir.getAbsolutePath());
-		}
 		
 		try {
 			loadCorpus();
@@ -93,14 +88,23 @@ public class CLImportationAlgorithm {
 		
 		processImports();
 		
-		Iterable<Document> documentsInCorpus = corpus.getDocuments();
-
-		for (Document document : documentsInCorpus) {
-			XMLUtil.writeXML(document, new File(resultDir, corpus.getOriginalFile(document).getName().replaceAll("myText", "resultText")));
-		}
+		//Iterable<Document> documentsInCorpus = corpus.getDocuments();
 		
-		catalog.write();
-		includes.writeIncludes();
+		if (corpus.size() > 0) {
+	        if (!(resultDir.exists() || resultDir.mkdir())) {
+	            throw new FolderCreationException("Error creating directory " + resultDir.getAbsolutePath());
+	        }
+	        for (Document document : corpus.getDocuments()) {
+	            XMLUtil.writeXML(document, new File(resultDir, corpus.getOriginalFile(document).getName().replaceAll("myText", "resultText")));
+	        }
+	        catalog.write();
+	        if (includes.size() > 0) {
+	            if (!(includesDir.exists() || includesDir.mkdir())) {
+	                throw new FolderCreationException("Error creating directory " + includesDir.getAbsolutePath());
+	            }
+	            includes.writeIncludes();
+	        }
+        }
 	}
 	
 	/**
@@ -129,16 +133,18 @@ public class CLImportationAlgorithm {
 	 */
 	private void processImports() {
 
-		Iterable<Document> documentsInCorpus = corpus.getDocuments();
+		//Iterable<Document> documentsInCorpus = corpus.getDocuments();
+	    importHistory = new Stack<String>();
 		
 		while(true) {
+		    System.out.println("Starting a Pass");
 			// repeat until a complete traversal does not yield any new import
 			// resolutions.
 			// TODO: possible performance optimization: remember unexecutable imports hidden in titled texts and process them without having to traverse the whole corpus again.
 			List<ElementPair> pendingReplacements = new LinkedList<CLImportationAlgorithm.ElementPair>(); 
 			
-			for (Document document : documentsInCorpus) {
-				visitedElements = new HashSet<Element>();
+			for (Document document : corpus.getDocuments()) {
+				//visitedElements = new HashSet<Element>();
 				processImport(document.getRootElement(), new Stack<String>(), new Stack<String>(), pendingReplacements);
 			}
 			
@@ -164,12 +170,12 @@ public class CLImportationAlgorithm {
 	 * @param e an Import element
 	 * @return True if an import has been executed, false otherwise
 	 */
-	private void processImport(Element e, Stack<String> importHistory, Stack<String> restrictHistory, List<ElementPair> pendingReplacements) {
+	private void processImport(Element e,  Stack<String> includeHistory, Stack<String> restrictHistory,  List<ElementPair> pendingReplacements) {
 		
-		if (visitedElements.contains(e)) {
+		/*if (visitedElements.contains(e)) {
 			return;
 		}
-		visitedElements.add(e);
+		visitedElements.add(e);*/
 		
 		ELEMENT_TYPE elementType = null;
 		try {
@@ -187,43 +193,55 @@ public class CLImportationAlgorithm {
 					// return immediately because Import elements cannot have further Import elements as successors.
 
 					// Otherwise: we have a matching titling. Replace the Import element with the contents of the Titling element.				
-					Element newXincludeElement = executeImport(e, titling, importHistory, restrictHistory);
+					Element newXincludeElement = executeImport(e, titling, restrictHistory);
 					
 					
 					pendingReplacements.add(new ElementPair(e, newXincludeElement));
 					
-					if (newXincludeElement == null) {
-						// cyclic import
-						System.out.println("*** Circle: removing " + e);
-						return;
-					}
-					
-					System.out.println("*** Replacing " + e + " with " + newXincludeElement);
-					
-					if (newXincludeElement != null) {
-						List<Element> children = newXincludeElement.getChildren();
-						for (Element child : children) {
-							// importProcessed is true because we have just performed an import
-							processImport(child, importHistory, restrictHistory, pendingReplacements);
-						}
+					if (!isXInclude(newXincludeElement)) {
+						// duplicate import
+    						System.out.println("*** Duplicate: removing " + e);
+    						return;
+					}		
+    					
+				    System.out.println("*** Replacing " + e + " with " + newXincludeElement);
+				
+					List<Element> children = newXincludeElement.getChildren();
+					for (Element child : children) {
+						// importProcessed is true because we have just performed an import
+						processImport(child, includeHistory, restrictHistory, pendingReplacements);
 					}
 				}
 				return;
 			case include:
 				String xincludeHref = e.getAttributeValue("href");
-				importHistory.push(xincludeHref);
+				if (includeHistory.contains(xincludeHref)){
+		            // duplicate include
+				    System.out.println("Deleting Duplicate Include");
+		            Element xincludeConstruct = new Element("Construct", XMLUtil.NS_XCL2);
+		            String commentString = "<include xmlns=\"http://www.w3.org/2001/XInclude\" href=\"";
+		            commentString = commentString +  xincludeHref;
+		            commentString = commentString +  "\"/>";
+		            xincludeConstruct.addContent(new Comment(commentString));
+                    pendingReplacements.add(new ElementPair(e, xincludeConstruct));
+                    // do not follow this include
+				    return;
+				}
+				
+				includeHistory.push(xincludeHref);
 				String fileHash = catalog.getFileHash(xincludeHref);
 				Element referencedInclude = includes.getInclude(fileHash, null);
 				
-				// the refereced include root element is supposed to be a Titling
+				// the referenced include root element is supposed to be a Titling
 				if (!referencedInclude.getName().equals("Titling")) {
 					System.err.println("Include " + xincludeHref + ": Root is not a Titling");
 				}
 				
 				List<Element> children = referencedInclude.getChildren();
 				for (Element child : children) {
-					processImport(child, importHistory, restrictHistory, pendingReplacements);
+					processImport(child, includeHistory, restrictHistory, pendingReplacements);
 				}
+				
 				break;
 			case Restrict:
 				restrictHistory.add(getName(e));
@@ -236,21 +254,24 @@ public class CLImportationAlgorithm {
 				break;
 		}
 		
-		// process import
+		// process children
 		
 		List<Element> children = e.getChildren();
 		for (Element child : children) {
-			processImport(child, importHistory, restrictHistory, pendingReplacements);
+			processImport(child, includeHistory, restrictHistory, pendingReplacements);
 		}
 		
+		// undo history
 		switch(elementType) {
-			case Import:
-			case include:
-				importHistory.pop();
-				break;
-			case Restrict:
-				restrictHistory.pop();
-				break;
+        case include:
+            includeHistory.pop();
+            break;
+        case Restrict:
+            restrictHistory.pop();
+            break;
+			default :
+			    break;
+				
 		}
 		
 	}
@@ -259,39 +280,45 @@ public class CLImportationAlgorithm {
 	 * Performs the import of a titling. Replaces the current Import element with an Xinclude element,
 	 * adds the imported content to an external file and adds a mapping in the xml catalog. 
 	 * @param importElement
-	 * @param titledContent
-	 * @param importHistory
+	 * @param titledElement
 	 * @param restrictHistory
 	 * @return the new xml include element or null if a cyclic import was detected. 
 	 */
-	private Element executeImport(Element importElement, Element titledContent, Stack<String> importHistory, Stack<String> restrictHistory) {
+	private Element executeImport(Element importElement, Element titledElement, Stack<String> restrictHistory) {
 		String titlingName = getName(importElement);
 		
 		String includeURI = getXincludeURI(titlingName, restrictHistory);
+		
 
 		if (importHistory.contains(includeURI)) {
-			// cyclic import 
-			return null;
-		}
-		
-		
-		// create a new xinclude element and replace the content of this element with it
-		Element xincludeElement = new Element("include", XMLUtil.NS_XINCLUDE);
-		xincludeElement.setAttribute("href", includeURI);
-		xincludeElement.setAttribute("parse", "xml");
-		
-		String hashCode = XMLUtil.getMD5Hash(titledContent);
+            // duplicate import 
+		    // replace with a text construction and comment
+            Element xincludeConstruct = new Element("Construct", XMLUtil.NS_XCL2);
+            String commentString = "<include xmlns=\"http://www.w3.org/2001/XInclude\" href=\"";
+            commentString = commentString +  includeURI.toString();
+            commentString = commentString +  "\"/>";
+            xincludeConstruct.addContent(new Comment(commentString));
+            return xincludeConstruct;
+        }
+
+	      // create a new xinclude element and replace the content of this element with it
+        Element xincludeElement = new Element("include", XMLUtil.NS_XINCLUDE);
+        xincludeElement.setAttribute("href", includeURI);
+        xincludeElement.setAttribute("parse", "xml");
+
+		String hashCode = XMLUtil.getMD5Hash(titledElement);
 		
 		// put the content of the titled text into a separate file
-		titledContent = includes.getInclude(hashCode, titledContent);
+		titledElement = includes.getInclude(hashCode, titledElement);
 		
 		// add a mapping to the xml catalog
 		catalog.addMapping(includeURI, hashCode);
 		
 		importHistory.push(includeURI);
 		
-		return xincludeElement;
+        return xincludeElement;
 	}
+	
 	
 	private String getXincludeURI(String titlingName, Stack<String> restrictHistory) {
 		try {
@@ -332,20 +359,49 @@ public class CLImportationAlgorithm {
 		return buf.toString();
 	}
 	
-	private boolean isTitling(Element e) {
-		return e.getName().equals("Titling");
+	private boolean isTitling(Content e) {
+	    switch(e.getCType()) {
+	        case Element : 
+	            return ((Element) e).getName().equals("Titling");
+            default:
+                return false;
+	    }
 	}
-	
-	private boolean isImport(Element e) {
-		return e.getName().equals("Import");
-	}
-	
-	private boolean isRestrict(Element e) {
-		return e.getName().equals("Restrict");
-	}
-	
-	private boolean isXinclude(Element e) {
-		return e.getName().equals("xinclude");
+
+   private boolean isImport(Content e) {
+        switch(e.getCType()) {
+            case Element : 
+                return ((Element) e).getName().equals("Import");
+            default:
+                return false;
+        }
+    }
+
+   private boolean isRestrict(Content e) {
+       switch(e.getCType()) {
+           case Element : 
+               return ((Element) e).getName().equals("Restrict");
+           default:
+               return false;
+       }
+   }
+
+   private boolean isXInclude(Content e) {
+       switch(e.getCType()) {
+           case Element : 
+               return ((Element) e).getName().equals("include");
+           default:
+               return false;
+       }
+   }
+
+	private boolean isComment(Content e) {
+	       switch(e.getCType()) {
+           case Comment : 
+               return true;
+           default:
+               return false;
+       }
 	}
 	
 	/**

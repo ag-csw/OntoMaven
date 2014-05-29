@@ -76,6 +76,15 @@ public class Corpus {
 	}
 	
 	/**
+	 * Returns the number of documents in the corpus
+	 * 
+	 * @return
+	 */
+	public Integer size() {
+	    return documents.size();
+	}
+	
+	/**
 	 * Returns an importable titling with a given name, or null if no such
 	 * titling exists.
 	 * 
@@ -128,7 +137,7 @@ public class Corpus {
 		} else {
 			System.out.println("  Adding titling " + titlingName);
 			
-			importableTitlings.put(titlingName, e);
+			importableTitlings.put(titlingName, e.clone());
 		}
 	}
 	

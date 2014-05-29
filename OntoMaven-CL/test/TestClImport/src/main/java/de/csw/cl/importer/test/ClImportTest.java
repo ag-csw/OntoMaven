@@ -209,25 +209,27 @@ public class ClImportTest extends TestCase {
 			}
 		});
 		
-		for (File testResultFile : testResultFiles) {
-			if (testResultFile.isFile()) {
-				
-				File expectedFile = new File(expectedResultDir, testResultFile.getName());
-				Document expectedDocument = XMLUtil.readLocalDoc(expectedFile);
-				Document testResultDocument = XMLUtil.readLocalDoc(testResultFile);
-				if (!XMLUtil.getCanonicalXML(testResultDocument).equals(XMLUtil.getCanonicalXML(expectedDocument))) {
-					XMLOutputter xmlOutputter = new XMLOutputter();
-					
-					StringWriter out = new StringWriter();
-					try {
-						xmlOutputter.output(testResultDocument, out);
-					} catch (IOException e) {
-						fail();
-					}
-					
-					fail("Content not as expected in " + testResultFile.getName() + "\n\n" + out.toString());
-				}
-			}
+		if (!(testResultFiles == null)) {
+    		for (File testResultFile : testResultFiles) {
+    			if (testResultFile.isFile()) {
+    				
+    				File expectedFile = new File(expectedResultDir, testResultFile.getName());
+    				Document expectedDocument = XMLUtil.readLocalDoc(expectedFile);
+    				Document testResultDocument = XMLUtil.readLocalDoc(testResultFile);
+    				if (!XMLUtil.getCanonicalXML(testResultDocument).equals(XMLUtil.getCanonicalXML(expectedDocument))) {
+    					XMLOutputter xmlOutputter = new XMLOutputter();
+    					
+    					StringWriter out = new StringWriter();
+    					try {
+    						xmlOutputter.output(testResultDocument, out);
+    					} catch (IOException e) {
+    						fail();
+    					}
+    					
+    					fail("Content not as expected in " + testResultFile.getName() + "\n\n" + out.toString());
+    				}
+    			}
+    		}
 		}
 		
 		// ... and now in the includes directory
@@ -238,17 +240,21 @@ public class ClImportTest extends TestCase {
 		
 		HashSet<String> expectedIncludeFileContents = new HashSet<String>();
 
-		for (File includeFile : expectedIncludeFiles) {
-			expectedIncludeFileContents.add(XMLUtil.getCanonicalXML(XMLUtil.readLocalDoc(includeFile)));
-		}
+        if(!(expectedIncludeFiles == null)) {
+    		for (File includeFile : expectedIncludeFiles) {
+    			expectedIncludeFileContents.add(XMLUtil.getCanonicalXML(XMLUtil.readLocalDoc(includeFile)));
+    		}
+        }
 		
 		ArrayList<String> unmatchedFiles = new ArrayList<String>();
 		
-		for (File includeFile : testResultIncludeFiles) {
-			if (!expectedIncludeFileContents.contains(XMLUtil.getCanonicalXML(XMLUtil.readLocalDoc(includeFile)))) {
-				unmatchedFiles.add(includeFile.getName());
-			}
-		}
+        if(!(testResultIncludeFiles == null)) {
+    		for (File includeFile : testResultIncludeFiles) {
+    			if (!expectedIncludeFileContents.contains(XMLUtil.getCanonicalXML(XMLUtil.readLocalDoc(includeFile)))) {
+    				unmatchedFiles.add(includeFile.getName());
+    			}
+    		}
+        }
 
 		StringBuilder buf = new StringBuilder("Unmatched include files:\n");
 		

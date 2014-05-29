@@ -30,6 +30,15 @@ public class Includes {
 	}
 	
 	/**
+	 *  Returns the number of included files
+	 *  
+	 * @return
+	 */
+	public Integer size() {
+	    return includes.size();
+	}
+	
+	/**
 	 * Creates complete xml documents for all includes and saves them to the
 	 * includes directory.
 	 */
