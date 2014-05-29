@@ -100,37 +100,7 @@ public class CLImportationAlgorithm {
 		
 		//Iterable<Document> documentsInCorpus = corpus.getDocuments();
 		
-		if (corpus.size() > 0) {
-			try {
-				Files.walkFileTree(resultDir.toPath(), new FileVisitor<Path>() {
-
-					public FileVisitResult preVisitDirectory(Path dir,
-							BasicFileAttributes attrs) throws IOException {
-						return FileVisitResult.CONTINUE;
-					}
-
-					public FileVisitResult visitFile(Path file,
-							BasicFileAttributes attrs) throws IOException {
-						Files.delete(file);
-						return FileVisitResult.CONTINUE;
-					}
-
-					public FileVisitResult visitFileFailed(Path file,
-							IOException exc) throws IOException {
-						return FileVisitResult.CONTINUE;
-					}
-
-					public FileVisitResult postVisitDirectory(Path dir,
-							IOException exc) throws IOException {
-						Files.delete(dir);
-						return FileVisitResult.CONTINUE;
-					}
-				});
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
+		if (corpus.size() > 0) {			
 	        if (!resultDir.mkdir()) {
 	            throw new FolderCreationException("Error creating directory " + resultDir.getAbsolutePath());
 	        }
