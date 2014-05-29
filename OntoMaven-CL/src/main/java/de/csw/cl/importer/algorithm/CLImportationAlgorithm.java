@@ -50,7 +50,7 @@ public class CLImportationAlgorithm {
 	// not used for now
 	private final Queue<Element> potentiallyPendingImports = new LinkedList<Element>();
 
-	private HashSet<Element> visitedElements;
+	private Stack<String> importHistory;
 	
 	/**
 	 * Constructs a {@link CLImportationAlgorithm} object initialized with a given base file.
@@ -88,13 +88,13 @@ public class CLImportationAlgorithm {
 		
 		processImports();
 		
-		Iterable<Document> documentsInCorpus = corpus.getDocuments();
+		//Iterable<Document> documentsInCorpus = corpus.getDocuments();
 		
 		if (corpus.size() > 0) {
 	        if (!(resultDir.exists() || resultDir.mkdir())) {
 	            throw new FolderCreationException("Error creating directory " + resultDir.getAbsolutePath());
 	        }
-	        for (Document document : documentsInCorpus) {
+	        for (Document document : corpus.getDocuments()) {
 	            XMLUtil.writeXML(document, new File(resultDir, corpus.getOriginalFile(document).getName().replaceAll("myText", "resultText")));
 	        }
 	        catalog.write();
@@ -133,16 +133,18 @@ public class CLImportationAlgorithm {
 	 */
 	private void processImports() {
 
-		Iterable<Document> documentsInCorpus = corpus.getDocuments();
+		//Iterable<Document> documentsInCorpus = corpus.getDocuments();
+	    importHistory = new Stack<String>();
 		
 		while(true) {
+		    System.out.println("Starting a Pass");
 			// repeat until a complete traversal does not yield any new import
 			// resolutions.
 			// TODO: possible performance optimization: remember unexecutable imports hidden in titled texts and process them without having to traverse the whole corpus again.
 			List<ElementPair> pendingReplacements = new LinkedList<CLImportationAlgorithm.ElementPair>(); 
 			
-			for (Document document : documentsInCorpus) {
-				visitedElements = new HashSet<Element>();
+			for (Document document : corpus.getDocuments()) {
+				//visitedElements = new HashSet<Element>();
 				processImport(document.getRootElement(), new Stack<String>(), new Stack<String>(), pendingReplacements);
 			}
 			
@@ -168,12 +170,12 @@ public class CLImportationAlgorithm {
 	 * @param e an Import element
 	 * @return True if an import has been executed, false otherwise
 	 */
-	private void processImport(Element e, Stack<String> importHistory, Stack<String> restrictHistory, List<ElementPair> pendingReplacements) {
+	private void processImport(Element e,  Stack<String> includeHistory, Stack<String> restrictHistory,  List<ElementPair> pendingReplacements) {
 		
-		if (visitedElements.contains(e)) {
+		/*if (visitedElements.contains(e)) {
 			return;
 		}
-		visitedElements.add(e);
+		visitedElements.add(e);*/
 		
 		ELEMENT_TYPE elementType = null;
 		try {
@@ -191,7 +193,7 @@ public class CLImportationAlgorithm {
 					// return immediately because Import elements cannot have further Import elements as successors.
 
 					// Otherwise: we have a matching titling. Replace the Import element with the contents of the Titling element.				
-					Element newXincludeElement = executeImport(e, titling, importHistory, restrictHistory);
+					Element newXincludeElement = executeImport(e, titling, restrictHistory);
 					
 					
 					pendingReplacements.add(new ElementPair(e, newXincludeElement));
@@ -207,13 +209,26 @@ public class CLImportationAlgorithm {
 					List<Element> children = newXincludeElement.getChildren();
 					for (Element child : children) {
 						// importProcessed is true because we have just performed an import
-						processImport(child, importHistory, restrictHistory, pendingReplacements);
+						processImport(child, includeHistory, restrictHistory, pendingReplacements);
 					}
 				}
 				return;
 			case include:
 				String xincludeHref = e.getAttributeValue("href");
-				importHistory.push(xincludeHref);
+				if (includeHistory.contains(xincludeHref)){
+		            // duplicate include
+				    System.out.println("Deleting Duplicate Include");
+		            Element xincludeConstruct = new Element("Construct", XMLUtil.NS_XCL2);
+		            String commentString = "<include xmlns=\"http://www.w3.org/2001/XInclude\" href=\"";
+		            commentString = commentString +  xincludeHref;
+		            commentString = commentString +  "\"/>";
+		            xincludeConstruct.addContent(new Comment(commentString));
+                    pendingReplacements.add(new ElementPair(e, xincludeConstruct));
+                    // do not follow this include
+				    return;
+				}
+				
+				includeHistory.push(xincludeHref);
 				String fileHash = catalog.getFileHash(xincludeHref);
 				Element referencedInclude = includes.getInclude(fileHash, null);
 				
@@ -224,8 +239,9 @@ public class CLImportationAlgorithm {
 				
 				List<Element> children = referencedInclude.getChildren();
 				for (Element child : children) {
-					processImport(child, importHistory, restrictHistory, pendingReplacements);
+					processImport(child, includeHistory, restrictHistory, pendingReplacements);
 				}
+				
 				break;
 			case Restrict:
 				restrictHistory.add(getName(e));
@@ -238,22 +254,21 @@ public class CLImportationAlgorithm {
 				break;
 		}
 		
-		// process import
+		// process children
 		
 		List<Element> children = e.getChildren();
 		for (Element child : children) {
-			processImport(child, importHistory, restrictHistory, pendingReplacements);
+			processImport(child, includeHistory, restrictHistory, pendingReplacements);
 		}
 		
+		// undo history
 		switch(elementType) {
-			case Import:
-			    break;
-			case include:
-				importHistory.pop();
-				break;
-			case Restrict:
-				restrictHistory.pop();
-				break;
+        case include:
+            includeHistory.pop();
+            break;
+        case Restrict:
+            restrictHistory.pop();
+            break;
 			default :
 			    break;
 				
@@ -266,11 +281,10 @@ public class CLImportationAlgorithm {
 	 * adds the imported content to an external file and adds a mapping in the xml catalog. 
 	 * @param importElement
 	 * @param titledElement
-	 * @param importHistory
 	 * @param restrictHistory
 	 * @return the new xml include element or null if a cyclic import was detected. 
 	 */
-	private Element executeImport(Element importElement, Element titledElement, Stack<String> importHistory, Stack<String> restrictHistory) {
+	private Element executeImport(Element importElement, Element titledElement, Stack<String> restrictHistory) {
 		String titlingName = getName(importElement);
 		
 		String includeURI = getXincludeURI(titlingName, restrictHistory);
@@ -278,6 +292,7 @@ public class CLImportationAlgorithm {
 
 		if (importHistory.contains(includeURI)) {
             // duplicate import 
+		    // replace with a text construction and comment
             Element xincludeConstruct = new Element("Construct", XMLUtil.NS_XCL2);
             String commentString = "<include xmlns=\"http://www.w3.org/2001/XInclude\" href=\"";
             commentString = commentString +  includeURI.toString();
@@ -303,6 +318,7 @@ public class CLImportationAlgorithm {
 		
         return xincludeElement;
 	}
+	
 	
 	private String getXincludeURI(String titlingName, Stack<String> restrictHistory) {
 		try {
