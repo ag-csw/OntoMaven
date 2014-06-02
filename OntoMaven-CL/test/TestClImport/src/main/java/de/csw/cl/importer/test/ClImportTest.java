@@ -59,8 +59,6 @@ public class ClImportTest extends TestCase {
 		} else {
 			expectedResultBaseDir = new File(expectedResultsDirPath);
 		}
-		
-
 	}
 
 	@Parameters
@@ -173,9 +171,9 @@ public class ClImportTest extends TestCase {
 			}
 		} catch (Throwable t) {
 			if (expectedThrowable == null || !expectedThrowable.isAssignableFrom(t.getClass())) {
-				System.err.println("Unexpected exception : " + t.getLocalizedMessage());
+				System.err.println("Unexpected exception : " + t.getMessage());
 				t.printStackTrace();
-				fail("Unexpected exception : " + t.getLocalizedMessage());
+				fail("Unexpected exception : " + t.getMessage());
 			}
 		}
 		

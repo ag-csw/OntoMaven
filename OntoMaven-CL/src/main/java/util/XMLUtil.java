@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -11,6 +13,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import javax.xml.XMLConstants;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.xerces.util.XMLCatalogResolver;
 import org.apache.xml.security.Init;
 import org.apache.xml.security.c14n.Canonicalizer;
 import org.apache.xml.security.c14n.InvalidCanonicalizerException;
@@ -18,40 +26,33 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 import org.jdom2.Attribute;
-import org.jdom2.Content;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.Namespace;
 import org.jdom2.input.SAXBuilder;
-import org.jdom2.input.sax.SAXHandlerFactory;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import de.csw.cl.importer.MainForMaven;
 
 /**
  * Util class for somee XML tasks.
  */
 public class XMLUtil {
 	
+	public enum XMLParserCapability {SIMPLE, RESOLVE_XINLUDE, VALIDATE_AND_RESOLVE_XINCLUDE};
+	
 	public static final Namespace NS_XCL2 = Namespace.getNamespace("http://iso-commonlogic.org/xcl2");
 	public static final Namespace NS_ONTOMAVEN = Namespace.getNamespace("http://ontomaven.org");
 	public static final Namespace NS_XINCLUDE = Namespace.getNamespace("http://www.w3.org/2001/XInclude");
 	public static final Namespace NS_CATALOG = Namespace.getNamespace("urn:oasis:names:tc:entity:xmlns:xml:catalog");
 	
-	private static final SAXBuilder SAX_PARSER;
 	private static final XMLOutputter XML_OUT;
 	
 	private static MessageDigest MD;
 	
-	private static Charset UTF8;
+	private static Charset UTF8 = Charset.forName("UTF-8");;
 
-	
-	
 	static {
 		Init.init(); // for using the library to building canonical xml
 		
@@ -61,35 +62,49 @@ public class XMLUtil {
 			e.printStackTrace();
 		}
 		
-		UTF8 = Charset.forName("UTF-8"); 
-		
 		// Initialize SAX parser
 		
 		// Java does not support Relax NG out of the box, so we have to use the Jing Bridge to the JAXP api.
-//		System.setProperty(SchemaFactory.class.getName() + ":" + XMLConstants.RELAXNG_NS_URI, "com.thaiopensource.relaxng.jaxp.CompactSyntaxSchemaFactory");
-//		
-//		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.RELAXNG_NS_URI);
-//		
-//		File schemaLocation = new File("/Users/ralph/Desktop/xcl2.rnc");
-//		Schema schema = null;
-//		try {
-//			schema = schemaFactory.newSchema(schemaLocation);
-//		} catch (SAXException e) {
-//			e.printStackTrace();
-//			System.exit(1);
-//		}
-//		
-//		XMLReaderJDOMFactory factory = new XMLReaderSchemaFactory(schema);
-//		SAX_PARSER = new SAXBuilder(factory);
-//		SAX_PARSER.setIgnoringElementContentWhitespace(true);
-		
-		// Jing handles validation of xmlns attributes incorrectly. Therefore, we use a non-validating parser.
-		SAX_PARSER = new SAXBuilder();
-		SAX_PARSER.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
+		System.setProperty(SchemaFactory.class.getName() + ":" + XMLConstants.RELAXNG_NS_URI, "com.thaiopensource.relaxng.jaxp.CompactSyntaxSchemaFactory");
 		
 		// Initialize XML outputter
 		XML_OUT = new XMLOutputter(Format.getCompactFormat().setExpandEmptyElements(true).setOmitDeclaration(true));
 
+	}
+	
+	public static SAXBuilder createSaxBuilder(XMLParserCapability capability, URI baseURI, URL schemaURL) {
+
+		SAXBuilder saxBuilder = new SAXBuilder();
+
+		switch (capability) {
+			case VALIDATE_AND_RESOLVE_XINCLUDE:
+				// configure sax builder for validation
+				SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.RELAXNG_NS_URI);
+				Schema schema = null;
+				try {
+					schema = schemaFactory.newSchema(schemaURL);
+					XincludeAwareXMLReaderSchemaFactory factory = new XincludeAwareXMLReaderSchemaFactory(schema);
+					saxBuilder.setXMLReaderFactory(factory);
+				} catch (SAXException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+			case RESOLVE_XINLUDE:
+				// configure sax builder for xinclude handling
+				
+				URIBuilder uriBuilder = new URIBuilder(baseURI);
+				uriBuilder.setPath((uriBuilder.getPath() + "/catalog.xml").replaceAll("//+", "/"));
+				URI catalogURI = URI.create(uriBuilder.toString());
+
+				XMLCatalogResolverFixed catalogResolver = new XMLCatalogResolverFixed(new String[] {catalogURI.toASCIIString()});
+				saxBuilder.setEntityResolver(catalogResolver);
+				break;
+			case SIMPLE:
+			default:
+				break;
+		}
+
+		return saxBuilder;
 	}
 	
 	/**
@@ -238,21 +253,34 @@ public class XMLUtil {
 	 */
 	public static Document readLocalDoc(File xmlFile) {
 		try {
-			return SAX_PARSER.build(xmlFile);
+			SAXBuilder saxBuilder = createSaxBuilder(XMLParserCapability.SIMPLE, null, null);
+			return saxBuilder.build(xmlFile);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}	
 	}
 	
+	public static Document readAndValidate(File xmlFile, URL schemaURL) {
+		URI baseURI = xmlFile.getParentFile().toURI();
+		SAXBuilder validator = createSaxBuilder(XMLParserCapability.VALIDATE_AND_RESOLVE_XINCLUDE, baseURI, schemaURL);
+		try {
+			validator.build(xmlFile);
+		} catch (JDOMException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return readLocalDoc(xmlFile);
+	}
+	
 	/**
 	 * Reads a xml document from a remote file.
 	 */
-	public static Document readDocFromURL(String urlAsString){
+	public static Document readDocFromURL(URL url) {
 		try {
-			InputSource in = MainForMaven.titlingLocationResolver.resolveEntity(urlAsString, null);
-//			sax.setEntityResolver(MainForMaven.titlingLocationResolver);
-			return SAX_PARSER.build(in);
+			return createSaxBuilder(XMLParserCapability.SIMPLE, null, null).build(url);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -287,30 +315,5 @@ public class XMLUtil {
 			System.out.println("O lala");
 		}
 		return result;
-	}
-	
-	public static void main(String[] args) {
-		Document doc;
-		try {
-			doc = SAX_PARSER.build(new File("/tmp/1.xml"));
-//		Element e = doc.getRootElement().getChild("Titling", NS_XCL2);
-//			System.out.println(getCanonicalXML(e));
-			Iterable<Content> contents = doc.getDescendants();
-			for (Content content : contents) {
-				if (content instanceof Element) {
-					((Element)content).removeNamespaceDeclaration(((Element) content).getNamespace());
-				}
-			}
-			
-			System.out.println(getCanonicalXML(doc));
-		} catch (JDOMException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-	}
+	}	
 }

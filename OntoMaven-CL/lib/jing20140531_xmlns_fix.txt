@@ -1,0 +1,35 @@
+The library file jing20140531_xmlns_fix.jar was built from http://jing-trang.googlecode.com/svn/tags/V20131210,
+inluding a modification to work around issue #135 (XML namespace declarations were not recognized, see
+https://code.google.com/p/jing-trang/issues/detail?id=135).
+
+The following modification has been made:
+
+### Eclipse Workspace Patch 1.0
+#P jing
+Index: mod/rng-jaxp/src/main/com/thaiopensource/relaxng/jaxp/ValidatorHandlerImpl.java
+===================================================================
+--- mod/rng-jaxp/src/main/com/thaiopensource/relaxng/jaxp/ValidatorHandlerImpl.java	(revision 2368)
++++ mod/rng-jaxp/src/main/com/thaiopensource/relaxng/jaxp/ValidatorHandlerImpl.java	(working copy)
+@@ -8,6 +8,8 @@
+ import com.thaiopensource.validation.ValidatorHandler2;
+ import com.thaiopensource.xml.sax.DraconianErrorHandler;
+ import com.thaiopensource.xml.util.Name;
++import com.thaiopensource.xml.util.WellKnownNamespaces;
++
+ import org.w3c.dom.ls.LSResourceResolver;
+ import org.xml.sax.Attributes;
+ import org.xml.sax.ContentHandler;
+@@ -64,6 +66,13 @@
+     int len = atts.getLength();
+     for (int i = 0; i < len; i++) {
+       Name attName = new Name(atts.getURI(i), atts.getLocalName(i));
++      
++      // Ralph: Work around validation error on xmlns "attributes".
++      // Related to issue #135 (https://code.google.com/p/jing-trang/issues/detail?id=135)
++      if (WellKnownNamespaces.XMLNS.equals(attName.getNamespaceUri()) ||
++    		  (WellKnownNamespaces.XMLNS + "/").equals(attName.getNamespaceUri()))
++    	  continue;
++
+       String attQName = atts.getQName(i);
+       check(matcher.matchAttributeName(attName, attQName, context));
+       check(matcher.matchAttributeValue(atts.getValue(i), attName, attQName, context));
