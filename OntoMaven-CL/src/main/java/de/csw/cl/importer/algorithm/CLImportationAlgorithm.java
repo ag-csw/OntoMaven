@@ -66,7 +66,11 @@ public class CLImportationAlgorithm {
 	 */
 	public CLImportationAlgorithm(File corpusDirectory) {
 
+		// TODO weiterer Parameter schema URL
+		
 		baseDir = corpusDirectory;
+		
+		// TODO als parameter
 		resultDir = new File(baseDir.getParentFile(), "test-result");
 		includesDir = new File(resultDir, "includes");
 
@@ -136,6 +140,11 @@ public class CLImportationAlgorithm {
 		
 		for (File file : files) {
 			Document doc = XMLUtil.readLocalDoc(file);
+			
+	// TODO	wenn schemaURL, dann:	
+//			XMLUtil.readAndValidate(file, schemaURL);
+			
+			
 			corpus.addDocument(doc, file);
 		}
 	}
