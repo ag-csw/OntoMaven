@@ -29,10 +29,10 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/commons-lang-2.3.jar"/>
-	<classpathentry kind="lib" path="lib/dom4j-1.6.1.jar"/>
-	<classpathentry kind="lib" path="lib/xml-security-1.0.4.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/xml-security-1.0.4.jar"/>
+	<classpathentry kind="lib" path="lib/dom4j-1.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/jing20140531_xmlns_fix.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

@@ -8,13 +8,13 @@ import static util.XMLUtil.NS_XCL2;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.SortedSet;
 import java.util.Stack;
 import java.util.TreeSet;
 
@@ -66,7 +66,11 @@ public class CLImportationAlgorithm {
 	 */
 	public CLImportationAlgorithm(File corpusDirectory) {
 
+		// TODO weiterer Parameter schema URL
+		
 		baseDir = corpusDirectory;
+		
+		// TODO als parameter
 		resultDir = new File(baseDir.getParentFile(), "test-result");
 		includesDir = new File(resultDir, "includes");
 
@@ -92,11 +96,16 @@ public class CLImportationAlgorithm {
 		
 		//Iterable<Document> documentsInCorpus = corpus.getDocuments();
 		
-		if (corpus.size() > 0) {
-	        if (!(resultDir.exists() || resultDir.mkdir())) {
+		if (corpus.size() > 0) {		
+	        if (!resultDir.mkdir()) {
 	            throw new FolderCreationException("Error creating directory " + resultDir.getAbsolutePath());
 	        }
 	        for (Document document : corpus.getDocuments()) {
+	        	XMLUtil.performRecursivelAction(document.getRootElement(), new XMLUtil.Action() {
+					public void doAction(Element e) {
+						e.removeAttribute("key");
+					}
+				});
 	            XMLUtil.writeXML(document, new File(resultDir, corpus.getOriginalFile(document).getName().replaceAll("myText", "resultText")));
 	        }
 	        catalog.write();
@@ -105,6 +114,13 @@ public class CLImportationAlgorithm {
 	                throw new FolderCreationException("Error creating directory " + includesDir.getAbsolutePath());
 	            }
 	            includes.writeIncludes();
+	        }
+	        List<String> unresolvedImports = getUnresolvedImports();
+	        if (!unresolvedImports.isEmpty()) {
+	        	System.out.println("Warning. There are unresolved importations:");
+	        	for (String unresolvedImport : unresolvedImports) {
+					System.out.println(unresolvedImport);
+				}
 	        }
         }
 	}
@@ -124,6 +140,11 @@ public class CLImportationAlgorithm {
 		
 		for (File file : files) {
 			Document doc = XMLUtil.readLocalDoc(file);
+			
+	// TODO	wenn schemaURL, dann:	
+//			XMLUtil.readAndValidate(file, schemaURL);
+			
+			
 			corpus.addDocument(doc, file);
 		}
 	}
@@ -132,8 +153,9 @@ public class CLImportationAlgorithm {
 	 * Processes all import directives in a depth-first fashion, starting at the
 	 * root of the document. Repeats until all imports have been resolved or
 	 * only unasserted import directives (nested in titlings) are available.
+	 * @throws ConflictingTitlingException 
 	 */
-	private void processImports() {
+	private void processImports() throws ConflictingTitlingException {
 
 		//Iterable<Document> documentsInCorpus = corpus.getDocuments();
 	    importHistory = new Stack<String>();
@@ -171,8 +193,9 @@ public class CLImportationAlgorithm {
 	 * 
 	 * @param e an Import element
 	 * @return True if an import has been executed, false otherwise
+	 * @throws ConflictingTitlingException 
 	 */
-	private void processImport(Element e,  Stack<String> includeHistory, Stack<String> restrictHistory,  List<ElementPair> pendingReplacements) {
+	private void processImport(Element e,  Stack<String> includeHistory, Stack<String> restrictHistory,  List<ElementPair> pendingReplacements) throws ConflictingTitlingException {
 		
 		/*if (visitedElements.contains(e)) {
 			return;
@@ -207,12 +230,13 @@ public class CLImportationAlgorithm {
     					
 				    System.out.println("*** Replacing " + e + " with " + newXincludeElement);
 				
-					Element includeReference = includes.getInclude(new Integer(includeNumber - 1).toString(), null);
+					Element includeReference = includes.getInclude(includeNumber.toString(), null);
 
 					List<Element> children = includeReference.getChildren();
 					for (Element child : children) {
 						processImport(child, includeHistory, restrictHistory, pendingReplacements);
 					}
+					importHistory.pop();
 				}
 				return;
 			case include:
@@ -285,8 +309,9 @@ public class CLImportationAlgorithm {
 	 * @param titledElement
 	 * @param restrictHistory
 	 * @return the new xml include element or null if a cyclic import was detected. 
+	 * @throws ConflictingTitlingException 
 	 */
-	private Element executeImport(Element importElement, Element titledElement, Stack<String> restrictHistory) {
+	private Element executeImport(Element importElement, Element titledElement, Stack<String> restrictHistory) throws ConflictingTitlingException {
 		String titlingName = getName(importElement);
 		
 		String includeURI = getXincludeURI(titlingName, restrictHistory);
@@ -309,11 +334,13 @@ public class CLImportationAlgorithm {
         xincludeElement.setAttribute("parse", "xml");
 
 		//String hashCode = XMLUtil.getMD5Hash(titledElement);
-        String hashCode = (includeNumber++).toString();
+        String hashCode = (++includeNumber).toString();
 		
 		// put the content of the titled text into a separate file
 		titledElement = includes.getInclude(hashCode, titledElement.clone());
 		System.out.println("Number of Includes: " + includeNumber.toString());
+		
+		corpus.extractTitlings(titledElement);
 		
 		// add a mapping to the xml catalog
 		// TODO: hashCode needs to be different for each includeURI 
@@ -429,6 +456,33 @@ public class CLImportationAlgorithm {
 		
 		Element original;
 		Element replacement;
+		
+		@Override
+		public boolean equals(Object obj) {
+			return (obj instanceof ElementPair) &&
+					((ElementPair)obj).original == original && 
+					((ElementPair)obj).replacement == replacement;
+		}
+		
+		@Override
+		public int hashCode() {
+			return original.hashCode() + replacement.hashCode();
+		}
+	}
+	
+	private LinkedList<String> getUnresolvedImports() {
+		final LinkedList<String> unresolvedImports = new LinkedList<String>();
+		Iterable<Document> documents = corpus.getDocuments();
+		for (Document document : documents) {
+			XMLUtil.performRecursivelAction(document.getRootElement(), new XMLUtil.Action() {
+				public void doAction(Element e) {
+					if (e.getName().equals("Import")) {
+						unresolvedImports.add(getName(e));
+					}
+				}
+			});
+		}
+		return unresolvedImports;
 	}
 	
 }

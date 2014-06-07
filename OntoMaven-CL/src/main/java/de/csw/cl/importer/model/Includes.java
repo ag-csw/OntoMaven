@@ -3,11 +3,8 @@
  */
 package de.csw.cl.importer.model;
 
-import static util.XMLUtil.NS_XCL2;
-
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map.Entry;
 
 import org.jdom2.Document;
@@ -51,21 +48,20 @@ public class Includes {
 				System.err.println("Discovered an include that is not a Titling");
 			}
 			
-			List<Element> children = rootElement.getChildren();
-			
-			Element nameElement = rootElement.getChild("Name", NS_XCL2);
-			children.remove(nameElement);
-			
-			Element newRootElement;
-			
-			if (children.size() == 1) {
-				newRootElement = children.get(0);
-				newRootElement.detach();
-			} else {
-				Element constructElement = new Element("Construct", XMLUtil.NS_XCL2);
-				constructElement.addContent(children);
-				newRootElement = constructElement;
+			// GitHub issue #23
+			Element newRootElement = rootElement.getChild("Construct");			
+			if (newRootElement == null) {
+				newRootElement = rootElement.getChild("Import");
 			}
+			if (newRootElement == null) {
+				newRootElement = rootElement.getChild("Restrict");
+			}
+			if (newRootElement == null) {
+				// no text in this include - no need to save
+				continue;
+			}
+			
+			newRootElement.detach();
 			
 			Document doc = new Document(newRootElement);
 			XMLUtil.writeXML(doc, new File(includesDir, fileName));

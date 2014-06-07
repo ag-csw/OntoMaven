@@ -45,7 +45,7 @@
 	<artifactId>clImport</artifactId>
 	<packaging>maven-plugin</packaging>
 	<version>1.0</version>
-	<name>c-import Maven Mojo</name>
+	<name>cl-import Maven Mojo</name>
 	<url>http://maven.apache.org</url>
 	<dependencies>
 		<dependency>
@@ -74,25 +74,9 @@
 			<version>3.3.100-v20070530</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>1.3.2</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
 			<version>2.0</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>xalan</artifactId>
-			<version>2.6.0</version>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
@@ -100,9 +84,24 @@
 			<version>1.2.17</version>
 		</dependency>
 		<dependency>
-			<groupId>com.thaiopensource</groupId>
-			<artifactId>jing</artifactId>
-			<version>20091111</version>
+			<groupId>xerces</groupId>
+			<artifactId>xercesImpl</artifactId>
+			<version>2.11.0</version>
+		</dependency>
+		<dependency>
+			<groupId>xalan</groupId>
+			<artifactId>xalan</artifactId>
+			<version>2.6.0</version>
+		</dependency>
+		<dependency>
+			<groupId>xml-resolver</groupId>
+			<artifactId>xml-resolver</artifactId>
+			<version>1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.3.3</version>
 		</dependency>
 	</dependencies>
 	<build>

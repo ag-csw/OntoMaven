@@ -1,5 +1,8 @@
 package de.csw.cl.importer.model;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.jdom2.Attribute;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -35,7 +38,12 @@ public class Import {
 		this.dowloadURL = downloadURL;
 		this.isRestrictImport = isRestrictImport;
 
-		Document xmlDocument = XMLUtil.readDocFromURL(downloadURL);
+		Document xmlDocument = null;
+		try {
+			xmlDocument = XMLUtil.readDocFromURL(new URL(downloadURL));
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
 		fileContent = XMLUtil.getCanonicalXML(xmlDocument);
 		fileName = String.valueOf(fileContent.hashCode()) + ".xml";
 	}
@@ -119,7 +127,13 @@ public class Import {
 		System.out.println("-------------------------------------------------- ");
 
 		// Loading the document to import.
-		Document loadedDocument = XMLUtil.readDocFromURL(dowloadURL);
+		Document loadedDocument = null;
+		try {
+			loadedDocument = XMLUtil.readDocFromURL(new URL(dowloadURL));
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		Element loadedRoot = loadedDocument.getRootElement();
 		System.out.println("Document has been loaded.");
 		

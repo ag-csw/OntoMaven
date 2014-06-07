@@ -53,10 +53,4 @@ public class XMLCatalog {
 	    }
 	}
 	
-	public static void main(String[] args) {
-		XMLCatalog c = new XMLCatalog(new File("/tmp/catalog.xml"));
-		c.addMapping("http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseL%2FmyText-L1%23a", "1");
-		c.addMapping("http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseL%2FmyText-L1%23c", "2");
-		c.write();
-	}
 }

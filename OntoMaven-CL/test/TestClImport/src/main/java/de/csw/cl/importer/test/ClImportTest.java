@@ -8,6 +8,11 @@ import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -54,8 +59,6 @@ public class ClImportTest extends TestCase {
 		} else {
 			expectedResultBaseDir = new File(expectedResultsDirPath);
 		}
-		
-
 	}
 
 	@Parameters
@@ -114,6 +117,40 @@ public class ClImportTest extends TestCase {
 			expectedResultDir = new File(new File(expectedResultBaseDir, (caseDirName)), "result2");
 		}
 
+		// delete stale files in test-result dir from previous runs
+		
+		try {
+			Files.walkFileTree(testResultDir.toPath(), new FileVisitor<Path>() {
+
+				public FileVisitResult preVisitDirectory(Path dir,
+						BasicFileAttributes attrs) throws IOException {
+					return FileVisitResult.CONTINUE;
+				}
+
+				public FileVisitResult visitFile(Path file,
+						BasicFileAttributes attrs) throws IOException {
+					Files.delete(file);
+					return FileVisitResult.CONTINUE;
+				}
+
+				public FileVisitResult visitFileFailed(Path file,
+						IOException exc) throws IOException {
+					return FileVisitResult.CONTINUE;
+				}
+
+				public FileVisitResult postVisitDirectory(Path dir,
+						IOException exc) throws IOException {
+					Files.delete(dir);
+					return FileVisitResult.CONTINUE;
+				}
+			});
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		
+		
 		// run algorithm on folder and fail if an inexpected exception is caught
 			
 		CLImportationAlgorithm algo = new CLImportationAlgorithm(testInputDir);
@@ -134,9 +171,9 @@ public class ClImportTest extends TestCase {
 			}
 		} catch (Throwable t) {
 			if (expectedThrowable == null || !expectedThrowable.isAssignableFrom(t.getClass())) {
-				System.err.println("Unexpected exceeption : " + t.getLocalizedMessage());
+				System.err.println("Unexpected exception : " + t.getMessage());
 				t.printStackTrace();
-				fail("Unexpected exceeption : " + t.getLocalizedMessage());
+				fail("Unexpected exception : " + t.getMessage());
 			}
 		}
 		

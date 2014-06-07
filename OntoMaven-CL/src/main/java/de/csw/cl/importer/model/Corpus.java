@@ -7,7 +7,6 @@ import static util.XMLUtil.NS_XCL2;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -104,7 +103,7 @@ public class Corpus {
 	 * @param e
 	 * @throws ConflictingTitlingException 
 	 */
-	private void extractTitlings(Element e) throws ConflictingTitlingException {
+	public void extractTitlings(Element e) throws ConflictingTitlingException {
 		List<Element> childElements = e.getChildren();
 		for (Element element : childElements) {
 			if (element.getName().equals("Titling")) {
