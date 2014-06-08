@@ -19,6 +19,8 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import util.XMLUtil;
+
 /**
  * 
  * @author ralph
@@ -51,7 +53,7 @@ public class TitlingLocationResolver implements EntityResolver {
 				Document doc = XMLUtil.readLocalDoc(xclFile);
 				IteratorIterable<Element> titlingElements = doc.getDescendants(new ElementFilter("Titling"));
 				for (Element titlingElement : titlingElements) {
-					Element nameElement = titlingElement.getChild("Name", Namespace.getNamespace("http://iso-commonlogic.org/xcl2"));
+					Element nameElement = titlingElement.getChild("Name", XMLUtil.NS_XCL2);
 					String titlingName = nameElement.getAttributeValue("cri");
 					try {
 						titlingLocationMap.put(titlingName, new InputSource(xclFile.toURI().toURL().toExternalForm()));

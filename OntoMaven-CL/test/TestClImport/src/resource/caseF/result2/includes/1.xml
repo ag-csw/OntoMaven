@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Construct xmlns="http://iso-commonlogic.org/xcl2" >
+<Construct xmlns="http://purl.org/xcl/2.0/" >
   <include xmlns="http://www.w3.org/2001/XInclude" href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseF%2FmyText-F1%23b" parse="xml"/>
    <Atom><Name>P</Name><Name>a</Name></Atom>
 </Construct>
