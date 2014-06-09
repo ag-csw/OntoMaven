@@ -336,7 +336,7 @@ public class CLImportationAlgorithm {
         String hashCode = (++includeNumber).toString();
 		
 		// put the content of the titled text into a separate file
-		titledElement = includes.getInclude(hashCode, titledElement.clone());
+		titledElement = includes.getInclude(hashCode, titledElement);
 		System.out.println("Number of Includes: " + includeNumber.toString());
 		
 		corpus.extractTitlings(titledElement);

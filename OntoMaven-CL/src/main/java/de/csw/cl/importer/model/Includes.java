@@ -49,12 +49,12 @@ public class Includes {
 			}
 			
 			// GitHub issue #23
-			Element newRootElement = rootElement.getChild("Construct");			
+			Element newRootElement = rootElement.getChild("Construct", XMLUtil.NS_XCL2);			
 			if (newRootElement == null) {
-				newRootElement = rootElement.getChild("Import");
+				newRootElement = rootElement.getChild("Import", XMLUtil.NS_XCL2);
 			}
 			if (newRootElement == null) {
-				newRootElement = rootElement.getChild("Restrict");
+				newRootElement = rootElement.getChild("Restrict", XMLUtil.NS_XCL2);
 			}
 			if (newRootElement == null) {
 				// no text in this include - no need to save
@@ -78,7 +78,7 @@ public class Includes {
 		Element existingInclude = includes.get(fileHash);
 		if (existingInclude == null) {
 			existingInclude = e.clone();
-			includes.put(fileHash, e);
+			includes.put(fileHash, existingInclude);
 		}
 		return existingInclude;
 	}
