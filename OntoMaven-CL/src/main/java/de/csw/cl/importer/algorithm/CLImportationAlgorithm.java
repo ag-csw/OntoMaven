@@ -236,7 +236,6 @@ public class CLImportationAlgorithm {
 					for (Element child : children) {
 						processImport(child, includeHistory, restrictHistory, pendingReplacements);
 					}
-					importHistory.pop();
 				}
 				return;
 			case include:
