@@ -2,24 +2,26 @@
 <?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
 <Construct xmlns="http://purl.org/xcl/2.0/"  xmlns:xi="http://www.w3.org/2001/XInclude">
   <Restrict>
-    <Name cri="http://example.org/caseN/myDomain-N2"/>
+    <Name cri="http://example.org/caseN/myDomain-N1"/>
     <Restrict>
       <Name cri="http://example.org/caseN/myDomain-N1"/>
-      <xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseN%2FmyText-N1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseN%2FmyDomain-N1" parse="xml"/>
+      <include xmlns="http://www.w3.org/2001/XInclude" href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseN%2FmyText-N1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseN%2FmyDomain-N1" parse="xml"/>
     </Restrict>
   </Restrict>
   <Restrict>
     <Name cri="http://example.org/caseN/myDomain-N2"/>
     <Restrict>
       <Name cri="http://example.org/caseN/myDomain-N1"/>
-      <xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseN%2FmyText-N1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseN%2FmyDomain-N1;dom2=http%3A%2F%2Fexample.org%2FcaseN%2FmyDomain-N2" parse="xml"/>
+      <include xmlns="http://www.w3.org/2001/XInclude" href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseN%2FmyText-N1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseN%2FmyDomain-N1;dom2=http%3A%2F%2Fexample.org%2FcaseN%2FmyDomain-N2" parse="xml"/>
     </Restrict>
   </Restrict>
   <Restrict>
     <Name cri="http://example.org/caseN/myDomain-N1"/>
     <Restrict>
       <Name cri="http://example.org/caseN/myDomain-N2"/>
-      <!-- <xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseN%2FmyText-N1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseN%2FmyDomain-N1;dom2=http%3A%2F%2Fexample.org%2FcaseN%2FmyDomain-N2" parse="xml"/> -->
+      <Construct>
+      <!-- <include xmlns="http://www.w3.org/2001/XInclude" href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseN%2FmyText-N1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseN%2FmyDomain-N1;dom2=http%3A%2F%2Fexample.org%2FcaseN%2FmyDomain-N2" parse="xml"/> -->
+      </Construct>
     </Restrict>
   </Restrict>
   <Atom><Name>Q</Name><Name>b</Name></Atom>

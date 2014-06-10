@@ -2,49 +2,17 @@
 <?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
 <Construct xmlns="http://purl.org/xcl/2.0/">
   <Titling>
-    <Name cri="http://example.org/caseN/myText-M2#a"/>
+    <Name cri="http://example.org/caseM/myText-M2#a"/>
     <Construct>
       <Atom><Name>P</Name><Name cri="http://example.org#a"/></Atom>
     </Construct>
   </Titling>  
   <Titling>
-    <Name cri="http://example.org/caseN/myText-M2#a"/>
-    <Construct>
-      <!-- This version of the titling has an XML comment. -->
-      <Atom><Name>P</Name><Name cri="http://example.org#a"/></Atom>
-    </Construct>
-  </Titling>
-  <Titling key="ex:ttl3">
-    <Name cri="http://example.org/caseN/myText-M2#a"/>
-    <Construct>
-      <!-- This version of the titling has a key attribute. -->
+    <!-- This version of the titling has a key attribute. -->
+    <Name cri="http://example.org/caseM/myText-M2#a"/>
+    <Construct  key="ex:ttl3">
       <Atom><Name>P</Name><Name cri="http://example.org#a"/></Atom>
     </Construct>
   </Titling>  
-  <Titling>
-    <Name cri="http://example.org/caseN/myText-M2#a"/>
-    <Construct>
-      <!-- This version of the titling has newlines. -->
-      <Atom>
-        <Name>P</Name>
-        <Name cri="http://example.org#a"/>
-      </Atom>
-    </Construct>
-  </Titling>  
-  <Titling>
-    <Name cri="http://example.org/caseN/myText-M2#a"/>
-    <Construct>
-      <!-- This version of the titling has the optional symbol edge in a name. -->
-      <Atom><Name><symbol>P</symbol></Name><Name cri="http://example.org#a"/></Atom>
-    </Construct>
-  </Titling>  
-  <Titling>
-    <Prefix pre="ex" iri="http://example.org"/>
-    <Name cri="http://example.org/caseN/myText-M2#a"/>
-    <Construct>
-      <!-- This version of the titling has a curie. -->
-      <Atom><Name>P</Name><Name cri="ex:#a"/></Atom>
-    </Construct>
-  </Titling>  
-
 </Construct>
+

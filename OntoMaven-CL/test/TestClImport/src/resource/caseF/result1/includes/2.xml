@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Construct xmlns="http://purl.org/xcl/2.0/">
   <Construct>
-   <!--<xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseF%2FmyText-F1%23a" parse="xml"/>-->
+   <!--<include xmlns="http://www.w3.org/2001/XInclude" href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseF%2FmyText-F1%23a" parse="xml"/>-->
   </Construct>
   <Atom><Name>R</Name><Name>c</Name></Atom>
 </Construct>

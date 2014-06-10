@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE catalog PUBLIC "-//OASIS//DTD XML Catalogs V1.1//EN" "http://www.oasis-open.org/committees/entity/release/1.0/catalog.dtd">
-<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
-  <!-- Case G -->
-  <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseG%2FmyDomain-G1" uri="includes/1.xml"/>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" prefer="public">
+  <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23b" uri="includes/3.xml"/>
   <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23a" uri="includes/4.xml"/>
-  <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23b;dom1=http%3A%2F%2Fexample.org%2FcaseG%2FmyDomain-G1" uri="includes/3.xml"/>
-  <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23b" uri="includes/2.xml"/>
+  <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseG%2FmyDomain-G1" uri="includes/1.xml"/>
+  <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23b;dom1=http%3A%2F%2Fexample.org%2FcaseG%2FmyDomain-G1" uri="includes/2.xml"/>
 </catalog>

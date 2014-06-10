@@ -3,7 +3,7 @@
 <Construct xmlns="http://purl.org/xcl/2.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
   <Restrict>
     <Name cri="http://example.org/caseB/myDomain-B1"/>
-    <xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseB%2FmyText-B1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseB%2FmyDomain-B1" parse="xml"/>
+    <include xmlns="http://www.w3.org/2001/XInclude" href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseB%2FmyText-B1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseB%2FmyDomain-B1" parse="xml"/>
   </Restrict>
   <Atom><Name>Q</Name><Name>b</Name></Atom>  
 </Construct>
