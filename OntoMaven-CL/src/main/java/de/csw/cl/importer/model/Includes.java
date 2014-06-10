@@ -64,7 +64,12 @@ public class Includes {
 			newRootElement.detach();
 			
 			Document doc = new Document(newRootElement);
-			XMLUtil.writeXML(doc, new File(includesDir, fileName));
+            XMLUtil.performRecursivelAction(doc.getRootElement(), new XMLUtil.Action() {
+                public void doAction(Element e) {
+                    e.removeAttribute("key");
+                }
+            });
+            XMLUtil.writeXML(doc, new File(includesDir, fileName));
 		}
 	}
 	

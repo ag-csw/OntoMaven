@@ -101,11 +101,6 @@ public class CLImportationAlgorithm {
 	            throw new FolderCreationException("Error creating directory " + resultDir.getAbsolutePath());
 	        }
 	        for (Document document : corpus.getDocuments()) {
-	        	XMLUtil.performRecursivelAction(document.getRootElement(), new XMLUtil.Action() {
-					public void doAction(Element e) {
-						e.removeAttribute("key");
-					}
-				});
 	            XMLUtil.writeXML(document, new File(resultDir, corpus.getOriginalFile(document).getName().replaceAll("myText", "resultText")));
 	        }
 	        catalog.write();
