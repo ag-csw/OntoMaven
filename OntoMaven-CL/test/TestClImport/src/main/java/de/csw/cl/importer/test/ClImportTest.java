@@ -80,8 +80,9 @@ public class ClImportTest extends TestCase {
 			   { "caseK", null },
 			   { "caseL", null },
 			   { "caseM", null },
-			   { "caseN", null },
-               { "caseP", null }
+               { "caseN", null },
+               { "caseP", null },
+               { "caseQ", null }
 			   };
 		return Arrays.asList(data);
 	}
@@ -156,7 +157,7 @@ public class ClImportTest extends TestCase {
 		CLImportationAlgorithm algo = new CLImportationAlgorithm(testInputDir);
 		
 		try {
-			algo.run();
+			algo.run(testResultDir);
 			if (expectedThrowable != null ) {
 				System.err.println("Exception of type " + expectedThrowable.getCanonicalName() + " expected, but none has been thrown.");
 				fail("Exception of type " + expectedThrowable.getCanonicalName() + " expected, but none has been thrown.");

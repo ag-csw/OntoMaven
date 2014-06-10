@@ -40,12 +40,10 @@ public class CLImportationAlgorithm {
 	
 	private File baseDir;
 	
-	private File resultDir;
+	//private File resultDir;
 	private File includesDir;
 	
 	private Corpus corpus;
-	private Includes includes;
-	private XMLCatalog catalog;
 	
 	// not used for now
 	private final Queue<Element> potentiallyPendingImports = new LinkedList<Element>();
@@ -70,12 +68,9 @@ public class CLImportationAlgorithm {
 		
 		baseDir = corpusDirectory;
 		
-		// TODO als parameter
-		resultDir = new File(baseDir.getParentFile(), "test-result");
-		includesDir = new File(resultDir, "includes");
+		// DONE als parameter
+		//resultDir = new File(baseDir.getParentFile(), "test-result");
 
-		includes = new Includes(includesDir);
-		catalog = new XMLCatalog(new File(resultDir, "catalog.xml"));
 	}
 	
 	/**
@@ -83,10 +78,10 @@ public class CLImportationAlgorithm {
 	 * @throws ConflictingTitlingException 
 	 * @throws FolderCreationException 
 	 */
-	public void run() throws ConflictingTitlingException, FolderCreationException {
+	public void run(File resultDir) throws ConflictingTitlingException, FolderCreationException {
 		
 		try {
-			loadCorpus();
+			corpus = loadCorpus(baseDir);
 		} catch (ConflictingTitlingException e) {
 //			System.out.println("Error: The corpus includes two conflicting titlings with the same name: " + e.getName() + ". Aborting.");
 			throw e;
@@ -96,52 +91,18 @@ public class CLImportationAlgorithm {
 		
 		//Iterable<Document> documentsInCorpus = corpus.getDocuments();
 		
-		if (corpus.size() > 0) {		
-	        if (!resultDir.mkdir()) {
-	            throw new FolderCreationException("Error creating directory " + resultDir.getAbsolutePath());
-	        }
-	        for (Document document : corpus.getDocuments()) {
-	            XMLUtil.writeXML(document, new File(resultDir, corpus.getOriginalFile(document).getName().replaceAll("myText", "resultText")));
-	        }
-	        catalog.write();
-	        if (includes.size() > 0) {
-	            if (!(includesDir.exists() || includesDir.mkdir())) {
-	                throw new FolderCreationException("Error creating directory " + includesDir.getAbsolutePath());
-	            }
-	            includes.writeIncludes();
-	        }
-	        List<String> unresolvedImports = getUnresolvedImports();
-	        if (!unresolvedImports.isEmpty()) {
-	        	System.out.println("Warning. There are unresolved importations:");
-	        	for (String unresolvedImport : unresolvedImports) {
-					System.out.println(unresolvedImport);
-				}
-	        }
-        }
+		corpus.write(resultDir);
+		
 	}
 	
 	/**
 	 * Loads the corpus.
 	 * @throws ConflictingTitlingException
 	 */
-	private void loadCorpus() throws ConflictingTitlingException {
-		corpus = new Corpus();
+	private Corpus loadCorpus(File baseDir) throws ConflictingTitlingException {
+		Corpus corpus = new Corpus(baseDir);
 		
-		File[] files = baseDir.listFiles(new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				return name.toLowerCase().endsWith(".xcl");
-			}
-		});
-		
-		for (File file : files) {
-			Document doc = XMLUtil.readLocalDoc(file);
-			
-	// TODO	wenn schemaURL, dann:	
-//			XMLUtil.readAndValidate(file, schemaURL);
-			
-			
-			corpus.addDocument(doc, file);
-		}
+		return corpus;
 	}
 	
 	/**
@@ -225,7 +186,7 @@ public class CLImportationAlgorithm {
     					
 				    System.out.println("*** Replacing " + e + " with " + newXincludeElement);
 				
-					Element includeReference = includes.getInclude(includeNumber.toString(), null);
+					Element includeReference = corpus.includes.getInclude(includeNumber.toString(), null);
 
 					List<Element> children = includeReference.getChildren();
 					for (Element child : children) {
@@ -249,8 +210,8 @@ public class CLImportationAlgorithm {
 				}
 				
 				includeHistory.push(xincludeHref);
-				String fileHash = catalog.getFileHash(xincludeHref);
-				Element referencedInclude = includes.getInclude(fileHash, null);
+				String fileHash = corpus.catalog.getFileHash(xincludeHref);
+				Element referencedInclude = corpus.includes.getInclude(fileHash, null);
 				
 				// the referenced include root element is supposed to be a Titling
 				if (!referencedInclude.getName().equals("Titling")) {
@@ -331,7 +292,7 @@ public class CLImportationAlgorithm {
         String hashCode = (++includeNumber).toString();
 		
 		// put the content of the titled text into a separate file
-		titledElement = includes.getInclude(hashCode, titledElement);
+		titledElement = corpus.includes.getInclude(hashCode, titledElement);
 		System.out.println("Number of Includes: " + includeNumber.toString());
 		
 		corpus.extractTitlings(titledElement);
@@ -339,7 +300,7 @@ public class CLImportationAlgorithm {
 		// add a mapping to the xml catalog
 		// TODO: hashCode needs to be different for each includeURI 
 		// if titledElement has Import or include elements in it.
-		catalog.addMapping(includeURI, hashCode);
+		corpus.catalog.addMapping(includeURI, hashCode);
 		
 		importHistory.push(includeURI);
 		
@@ -464,19 +425,5 @@ public class CLImportationAlgorithm {
 		}
 	}
 	
-	private LinkedList<String> getUnresolvedImports() {
-		final LinkedList<String> unresolvedImports = new LinkedList<String>();
-		Iterable<Document> documents = corpus.getDocuments();
-		for (Document document : documents) {
-			XMLUtil.performRecursivelAction(document.getRootElement(), new XMLUtil.Action() {
-				public void doAction(Element e) {
-					if (e.getName().equals("Import")) {
-						unresolvedImports.add(getName(e));
-					}
-				}
-			});
-		}
-		return unresolvedImports;
-	}
 	
 }

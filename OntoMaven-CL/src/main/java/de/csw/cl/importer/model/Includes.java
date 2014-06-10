@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import org.jdom2.Document;
 import org.jdom2.Element;
 
+import de.csw.cl.importer.algorithm.FolderCreationException;
 import util.XMLUtil;
 
 /**
@@ -24,6 +25,21 @@ public class Includes {
 	
 	public Includes(File includesDir) {
 		this.includesDir = includesDir;
+		if(includesDir.exists()) {
+		    File[] includeFiles = includesDir.listFiles();
+		    for( File file: includeFiles) {
+		        String fileName = file.getName();
+		        String fileNameWithoutExtension = fileName.substring(0, fileName.length()-4);
+		        Document inc = XMLUtil.readLocalDoc(file);
+		        Document doc = new Document();
+		        Element e = new Element("Titling", XMLUtil.NS_XCL2);
+		        e.addContent(new Element("Name", XMLUtil.NS_XCL2));
+		        e.addContent(inc.getRootElement().detach());
+		        doc.setRootElement(e);
+		        getInclude( fileNameWithoutExtension, doc.getRootElement());
+		        System.out.println("Loaded include file: " + fileNameWithoutExtension);
+		    }
+		}
 	}
 	
 	/**
@@ -38,8 +54,14 @@ public class Includes {
 	/**
 	 * Creates complete xml documents for all includes and saves them to the
 	 * includes directory.
+	 * @throws FolderCreationException 
 	 */
-	public void writeIncludes() {
+	public void writeIncludes(File resultDir) throws FolderCreationException {
+        if (includes.size() > 0) {
+            File outIncludesDir = new File(resultDir, "includes");
+            if (!(outIncludesDir.exists() || outIncludesDir.mkdir())) {
+                throw new FolderCreationException("Error creating directory " + outIncludesDir.getAbsolutePath());
+            }
 		for (Entry<String, Element> entry : includes.entrySet()) {
 			String fileName = entry.getKey() + ".xml";
 			Element rootElement = entry.getValue();
@@ -69,8 +91,9 @@ public class Includes {
                     e.removeAttribute("key");
                 }
             });
-            XMLUtil.writeXML(doc, new File(includesDir, fileName));
+            XMLUtil.writeXML(doc, new File(outIncludesDir, fileName));
 		}
+        }
 	}
 	
 	/**
@@ -80,6 +103,7 @@ public class Includes {
 	 * @param e
 	 */
 	public Element getInclude(String fileHash, Element e) {
+	    System.out.println("Attempting to retrieve include file: " + fileHash);
 		Element existingInclude = includes.get(fileHash);
 		if (existingInclude == null) {
 			existingInclude = e.clone();

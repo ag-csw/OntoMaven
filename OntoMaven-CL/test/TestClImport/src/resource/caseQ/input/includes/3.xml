@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Construct xmlns="http://purl.org/xcl/2.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <Construct>
+  <!--<include xmlns="http://www.w3.org/2001/XInclude" href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseG%2FmyDomain-G1" parse="xml"/>-->
+  </Construct>
+   <Atom><Name>R</Name><Name>c</Name></Atom>
+</Construct>

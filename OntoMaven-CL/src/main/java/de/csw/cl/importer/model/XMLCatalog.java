@@ -23,6 +23,16 @@ public class XMLCatalog {
 	
 	public XMLCatalog(File catalogFile) {
 		this.catalogFile = catalogFile;
+		if(catalogFile.exists()) {
+		    Document catalogDocument = XMLUtil.readLocalDoc(catalogFile);
+		    Element root = catalogDocument.getRootElement();
+		    for (Element c: root.getChildren()) {
+		        String uriString = c.getAttributeValue("uri");
+		        //if(uriString.matches("^includes/")) {
+		          addMapping( c.getAttributeValue("name"),uriString.substring(9, uriString.length()-4));
+		        //} 
+		    }
+		}
 	}
 	
 	public void addMapping(String uri, String fileHash) {
@@ -33,8 +43,13 @@ public class XMLCatalog {
 		return uriMappings.get(uri);
 	}
 	
-	public void write() {
+	public HashMap<String, String> getMappings() {
+	    return uriMappings;
+	}
+	
+	public void write(File resultDir) {
 	    if (uriMappings.size() > 0) {
+	        File outCatalogFile = new File(resultDir, "catalog.xml");
     		Document catalogDocument = new Document();
     		catalogDocument.setDocType(new DocType("catalog",
     						"-//OASIS//DTD XML Catalogs V1.1//EN",
@@ -49,7 +64,7 @@ public class XMLCatalog {
     			newElement.setNamespace(XMLUtil.NS_CATALOG);
     			catalogDocument.getRootElement().addContent(newElement);
     		}
-    		XMLUtil.writeXML(catalogDocument, catalogFile);
+    		XMLUtil.writeXML(catalogDocument, outCatalogFile);
 	    }
 	}
 	
