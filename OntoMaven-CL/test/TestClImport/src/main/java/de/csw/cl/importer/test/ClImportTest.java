@@ -232,7 +232,7 @@ public class ClImportTest extends TestCase {
 		
 		// compare files in the result directory
 
-        File[] testResultFiles = expectedResultDir.listFiles(new FileFilter() {
+        File[] expectedResultFiles = expectedResultDir.listFiles(new FileFilter() {
             
             public boolean accept(File file) {
                 return file.isFile() &&
@@ -240,7 +240,16 @@ public class ClImportTest extends TestCase {
                                 file.getName().toLowerCase().endsWith(".xcl"));
             }
         });
-        
+
+        File[] testResultFiles = testResultDir.listFiles(new FileFilter() {
+            
+            public boolean accept(File file) {
+                return file.isFile() &&
+                        (file.getName().toLowerCase().endsWith(".xml") ||
+                                file.getName().toLowerCase().endsWith(".xcl"));
+            }
+        });
+
 		if (!(testResultFiles == null)) {
     		for (File testResultFile : testResultFiles) {
     			if (testResultFile.isFile()) {
@@ -251,17 +260,30 @@ public class ClImportTest extends TestCase {
     				if (!XMLUtil.getCanonicalXML(testResultDocument).equals(XMLUtil.getCanonicalXML(expectedDocument))) {
     					XMLOutputter xmlOutputter = new XMLOutputter();
     					
-    					StringWriter out = new StringWriter();
+                        StringWriter out = new StringWriter();
+                        StringWriter outExpected = new StringWriter();
     					try {
-    						xmlOutputter.output(testResultDocument, out);
+                            xmlOutputter.output(testResultDocument, out);
+                            xmlOutputter.output(expectedDocument, outExpected);
     					} catch (IOException e) {
     						fail();
     					}
     					
-    					fail("Content not as expected in " + testResultFile.getName() + "\n\n" + out.toString());
+    					fail("Content not as expected in " + testResultFile.getName() + "\n\n" + out.toString()
+    					        + "\n\n" + "SHOULD BE" + "\n\n" + outExpected.toString() + "\n\n");
     				}
     			}
+    			else {
+    			    fail("Not a File");
+    			}
     		}
+    		
+		}
+		else {
+		    if(!(expectedResultFiles == null)){
+		        fail("No test results files when files are expected.");
+		    }
+		        
 		}
 		
 		// ... and now in the includes directory
