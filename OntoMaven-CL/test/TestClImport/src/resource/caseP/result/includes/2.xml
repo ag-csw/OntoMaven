@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-   <!--<include xmlns="http://www.w3.org/2001/XInclude" href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseD%2FmyText-D1%23a" parse="xml"/>-->
 <Restrict  xmlns="http://purl.org/xcl/2.0/">
   <Name cri="http://example.org/caseP/myDomain-P1"/>
   <Construct>
