@@ -21,6 +21,7 @@ import org.jdom2.Content;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.Parent;
+import org.jdom2.output.XMLOutputter;
 
 import util.XMLUtil;
 import de.csw.cl.importer.model.ConflictingTitlingException;
@@ -78,17 +79,21 @@ public class CLImportationAlgorithm {
 		try {
 		    corpus = new Corpus(baseDir);
 		} catch (ConflictingTitlingException e) {
-//			System.out.println("Error: The corpus includes two conflicting titlings with the same name: " + e.getName() + ". Aborting.");
+		    LOG.error(e);
 			throw e;
-		}
+		} catch (MissingCatalogEntryException e) {
+            LOG.error(e);
+            throw e;
+        } catch (MissingIncludeEntryException e) {
+            LOG.error(e);
+            throw e;
+        }
 		
 		// count the number of includes already in the corpus
 		// TODO: This only works for minting new names if all included file names are sequentially numbered from 1.
 		includeNumber = corpus.includes.size();
 		
 		processImports();
-		
-		//Iterable<Document> documentsInCorpus = corpus.getDocuments();
 		
 		corpus.write(resultDir);
 		
@@ -104,15 +109,13 @@ public class CLImportationAlgorithm {
 	 */
 	private void processImports() throws ConflictingTitlingException, MissingCatalogEntryException, MissingIncludeEntryException {
 
-		//Iterable<Document> documentsInCorpus = corpus.getDocuments();
-		
 		while(true) {
 		    LOG.debug("Starting a Pass");
 		    System.out.println("Starting a Pass");
 		    // flag to keep track of changes in the catalog
 		    boolean changed = false;
 			// repeat until a complete traversal does not yield any new import
-			// resolutions.
+			// resolutions, as indicated by a change in the catalog.
 			// TODO: possible performance optimization: remember unexecutable imports hidden in titled texts and process them without having to traverse the whole corpus again.
 			List<ElementPair> pendingReplacements = new LinkedList<CLImportationAlgorithm.ElementPair>(); 
 			
@@ -140,13 +143,19 @@ public class CLImportationAlgorithm {
 	
 	/**
 	 * 
-	 * @param e an Import element
+	 * @param e an XML Element
+     * @param includeHistory
+     * @param restrictHistory
+     * @param pendingReplacements
 	 * @return True if an import has been executed, false otherwise
 	 * @throws ConflictingTitlingException 
 	 * @throws MissingIncludeEntryException 
 	 * @throws MissingCatalogEntryException 
 	 */
-	private boolean processImport(Element e,  Stack<String> includeHistory, Stack<String> restrictHistory,  List<ElementPair> pendingReplacements) throws ConflictingTitlingException, MissingCatalogEntryException, MissingIncludeEntryException {
+	private boolean processImport(Element e,  Stack<String> includeHistory, 
+	        Stack<String> restrictHistory,  List<ElementPair> pendingReplacements) 
+	        throws ConflictingTitlingException, MissingCatalogEntryException, MissingIncludeEntryException {
+	    
 		boolean changed = false;
 		/*if (visitedElements.contains(e)) {
 			return;
@@ -200,12 +209,8 @@ public class CLImportationAlgorithm {
 	                if (xincludeHref.startsWith(XMLUtil.NS_ONTOMAVEN.getURI().toString())) {
     		            // duplicate include in Ontomaven namespace can be removed
     				    System.out.println("Warning: Should Never Happen: Deleting Duplicate Include");
-    		            Element xincludeConstruct = new Element("Construct", XMLUtil.NS_XCL2);
-    		            String commentString = "<include xmlns=\"http://www.w3.org/2001/XInclude\" href=\"";
-    		            commentString = commentString +  xincludeHref;
-    		            commentString = commentString +  "\"/>";
-    		            xincludeConstruct.addContent(new Comment(commentString));
-                        pendingReplacements.add(new ElementPair(e, xincludeConstruct));
+    			        Element xincludeElement = makeInclude(xincludeHref);
+                        pendingReplacements.add(new ElementPair(e, constructComment(xincludeElement)));
                         // do not follow this include
     				    return changed;
     				}
@@ -234,9 +239,7 @@ public class CLImportationAlgorithm {
 		}
 		
 		// process children
-		
-		List<Element> children = e.getChildren();
-		for (Element child : children) {
+		for (Element child : e.getChildren()) {
 			if(processImport(child, includeHistory, restrictHistory, pendingReplacements)) {
 			    changed = true;
 			}
@@ -244,15 +247,14 @@ public class CLImportationAlgorithm {
 		
 		// undo history
 		switch(elementType) {
-        case include:
-            includeHistory.pop();
-            break;
-        case Restrict:
-            restrictHistory.pop();
-            break;
-		default :
-			break;
-				
+            case include:
+                includeHistory.pop();
+                break;
+            case Restrict:
+                restrictHistory.pop();
+                break;
+    		default :
+    			break;				
 		}
 		return changed;
 		
@@ -275,22 +277,14 @@ public class CLImportationAlgorithm {
 		
 		String includeURI = getXincludeURI(titlingName, restrictHistory);
 		
+        // create a new xinclude element and replace the content of this element with it
+		Element xincludeElement = makeInclude(includeURI);
 
 		if (!(corpus.catalog.getFileHash(includeURI) == null)) {
             // duplicate import 
-		    // replace with a text construction and comment
-            Element xincludeConstruct = new Element("Construct", XMLUtil.NS_XCL2);
-            String commentString = "<include xmlns=\"http://www.w3.org/2001/XInclude\" href=\"";
-            commentString = commentString +  includeURI.toString();
-            commentString = commentString +  "\"/>";
-            xincludeConstruct.addContent(new Comment(commentString));
-            return xincludeConstruct;
-        }
-
-	      // create a new xinclude element and replace the content of this element with it
-        Element xincludeElement = new Element("include", XMLUtil.NS_XINCLUDE);
-        xincludeElement.setAttribute("href", includeURI);
-        xincludeElement.setAttribute("parse", "xml");
+		    // return a text construction containing an XML comments
+            return constructComment(xincludeElement) ;
+        }        
 
 		//String hashCode = XMLUtil.getMD5Hash(titledElement);
         // TODO: hashCode only needs to be different for each includeURI 
@@ -302,13 +296,27 @@ public class CLImportationAlgorithm {
 		titledContent = corpus.includes.getInclude(filePath, titledContent);
 		System.out.println("Number of Includes: " + includeNumber.toString());
 		
+		// add any new titlings from the imported content to the corpus importableTitlings field
 		corpus.extractTitlings(titledContent);
 		
-		// add a mapping to the xml catalog
+		// add a mapping to the xml catalog of the corpus
 		corpus.catalog.addMapping(includeURI, filePath);
 		
 		
         return xincludeElement;
+	}
+	
+	private Element makeInclude(String includeURI) {
+        Element xincludeElement = new Element("include", XMLUtil.NS_XINCLUDE);
+        xincludeElement.setAttribute("href", includeURI);
+        return xincludeElement.setAttribute("parse", "xml");
+	}
+	
+	private Element constructComment(Element e) {
+        Element xincludeConstruct = new Element("Construct", XMLUtil.NS_XCL2);
+        XMLOutputter xmlOutputter = new XMLOutputter();
+        String commentString =  xmlOutputter.outputString(e);
+        return xincludeConstruct.addContent(new Comment(commentString));
 	}
 	
 	private Element getTitlingContent(Element titledElement) throws MissingCatalogEntryException, MissingIncludeEntryException {
