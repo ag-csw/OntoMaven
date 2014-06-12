@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Construct>
+  <!-- <include xmlns="http://www.w3.org/2001/XInclude" href="../external1/1.xcl"/> -->
+  <include xmlns="http://www.w3.org/2001/XInclude" href="x3.xml"/>
+  <Atom>
+    <Name>P</Name>
+    <Name>a</Name>
+  </Atom>
+</Construct>
