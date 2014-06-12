@@ -246,19 +246,14 @@ public class Corpus {
             LOG.debug("Checking child: "+ child.getName());
             System.out.println("Checking child: "+ child.getName());
 		    child = followInclude(child);		    
-		    if(child.getNamespace().equals(XMLUtil.NS_XCL2)) {
-    			if (child.getName().equals("Titling")) {
+   			if (Corpus.isTitling(child)) {
                     LOG.debug("Adding titling");
                     System.out.println("Adding titling");
     				addImportableTitling(child);
-    			} 
-                if (child.getName().equals("Construct")) {
+   			} 
+            if (Corpus.isConstruct(child) || Corpus.isRestrict(child)) {
                     extractTitlings(child);
-                } 
-                if (child.getName().equals("Restrict")) {
-                    extractTitlings(child);
-                } 
-    		}
+            } 
 		}
 	}
 
@@ -269,8 +264,7 @@ public class Corpus {
 	 */
 	private void addImportableTitling(Element e)
 			throws ConflictingTitlingException {
-		Element nameElement = e.getChild("Name", NS_XCL2);
-		String titlingName = nameElement.getAttributeValue("cri");
+		String titlingName = getName(e);
         //TODO if titlingName is CURIE, expand to IRI
         //TODO if nameElement has no cri attribute, get symbol
 
@@ -321,7 +315,7 @@ public class Corpus {
                 throw new FolderCreationException("Error creating directory " + resultDir.getAbsolutePath());
             }
             for (Document document : getDocuments()) {
-                XMLUtil.writeXML(document, new File(resultDir, getOriginalFile(document).getName().replaceAll("myText", "resultText")));
+                XMLUtil.writeXML(document, getOutputFile(resultDir, document) );
             }
             catalog.write(resultDir);
             includes.writeIncludes(resultDir);
@@ -337,11 +331,16 @@ public class Corpus {
         }
 	    
 	}
+	
+	private File getOutputFile(File resultDir, Document document) {
+	    return new File(resultDir, getOriginalFile(document).getName().replaceAll("myText", "resultText")); 
+	}
+	
 	   private LinkedList<String> getUnresolvedImports() {
 	        final LinkedList<String> unresolvedImports = new LinkedList<String>();
 	        Iterable<Document> documents = getDocuments();
 	        for (Document document : documents) {
-	            final String fileName = getOriginalFile(document).getName().replaceAll("myText", "resultText");
+	            final String fileName = getOutputFile( null, document).getName() ;
 	            XMLUtil.performRecursivelAction(document.getRootElement(), new XMLUtil.Action() {
 	                public void doAction(Element e) {
 	                    if (e.getName().equals("Import") && isUntitled(e)) {
@@ -366,6 +365,8 @@ public class Corpus {
 
 	    public static String getName(Element e) {
 	        Element nameElement = e.getChild("Name", NS_XCL2);
+	        //TODO: resolve CURIEs
+	        //TODO: get non-IRI names
 	        return nameElement == null ? null : nameElement.getAttributeValue("cri");
 	    }
 	    
@@ -426,8 +427,7 @@ public class Corpus {
 	               return false;
 	       }
 	    }
-	    
-
+	   
 
 	
 }

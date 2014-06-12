@@ -171,7 +171,7 @@ public class CLImportationAlgorithm {
 		
 		switch (elementType) {
 			case Import:
-				String name = getName(e);
+				String name = Corpus.getName(e);
 				Element titling = corpus.getImportableTitling(name);
 				if (titling != null) {
 					// no titling available for this import (yet):
@@ -185,7 +185,7 @@ public class CLImportationAlgorithm {
 					
 					pendingReplacements.add(new ElementPair(e, newXincludeElement));
 					
-					if (!isXInclude(newXincludeElement)) {
+					if (!Corpus.isXInclude(newXincludeElement)) {
 						// duplicate import
     						System.out.println("*** Duplicate: removing " + e);
     						return changed;
@@ -225,7 +225,7 @@ public class CLImportationAlgorithm {
 				
 				break;
 			case Restrict:
-				restrictHistory.add(getName(e));
+				restrictHistory.add(Corpus.getName(e));
 				break;
 			case Titling:
 				// do not process import directives in titlings (yet).
@@ -273,7 +273,7 @@ public class CLImportationAlgorithm {
 	 */
 	private Element executeImport(Element importElement, Element titledElement, Stack<String> restrictHistory) throws ConflictingTitlingException, MissingCatalogEntryException, MissingIncludeEntryException {
 	    Element titledContent;
-		String titlingName = getName(importElement);
+		String titlingName = Corpus.getName(importElement);
 		
 		String includeURI = getXincludeURI(titlingName, restrictHistory);
 		
@@ -374,25 +374,7 @@ public class CLImportationAlgorithm {
 		return buf.toString();
 	}
 	
-	/**
-	 * Returns the name of a CL element
-	 * @param e
-	 * @return
-	 */
-	private String getName(Element e) {
-		Element nameElement = e.getChild("Name", NS_XCL2);
-		return nameElement == null ? null : nameElement.getAttributeValue("cri");
-	}
-	
-    private boolean isXInclude(Content e) {
-        switch(e.getCType()) {
-            case Element : 
-                return (((Element) e).getName().equals("include") && ((Element) e).getNamespace().equals(XMLUtil.NS_XINCLUDE) );
-            default:
-                return false;
-        }
-    }
-    
+	    
 
 	
 	private class ElementPair {
