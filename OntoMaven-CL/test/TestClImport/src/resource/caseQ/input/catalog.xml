@@ -5,4 +5,5 @@
   <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23a" uri="includes/4.xml"/>
   <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23a;dom1=http%3A%2F%2Fexample.org%2FcaseG%2FmyDomain-G1" uri="includes/1.xml"/>
   <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23b;dom1=http%3A%2F%2Fexample.org%2FcaseG%2FmyDomain-G1" uri="includes/2.xml"/>
+  <uri name="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseG%2FmyText-G1%23c" uri="includes/5.xml"/>
 </catalog>
