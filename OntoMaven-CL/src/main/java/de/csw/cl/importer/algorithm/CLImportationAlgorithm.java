@@ -170,6 +170,9 @@ public class CLImportationAlgorithm {
 
 					// Otherwise: we have a matching titling. Replace the Import element with the contents of the Titling element.				
 					Element newXincludeElement = executeImport(e, titling, restrictHistory);
+                    //TODO: verify that an XInclude loop has not been created by this import resolution 
+					//TODO: verify that the XInclude closure of the new document can be constructed
+                    //TODO: verify that the newly resolved document is valid against the  XCL2 Relax NG schema  
 					
 					pendingReplacements.add(new ElementPair(e, newXincludeElement));
 					
@@ -182,9 +185,7 @@ public class CLImportationAlgorithm {
 				    System.out.println("*** Replacing " + e + " with " + newXincludeElement);
 				    changed = true;
 				
-				    String filePath = "includes/" + includeNumber.toString() + ".xml";
-					Element includeReference = corpus.includes.getInclude(filePath, null);
-					//TODO: verify that an XInclude loop has not been created by this import resolution 
+				    Element includeReference = corpus.followInclude(newXincludeElement);
 
 					if(processImport(includeReference, includeHistory, restrictHistory, pendingReplacements)) {
 					    changed = true;
@@ -194,8 +195,8 @@ public class CLImportationAlgorithm {
 			case include:
 				String xincludeHref = e.getAttributeValue("href");
                 if (includeHistory.contains(xincludeHref)){
-				    System.out.println("Found a circular XInclude directives:");
-                    //TODO: move this check into the Corpus constructor
+				    System.out.println("Found a circular XInclude directive:");
+                    //TODO: move this check into the Corpus followInclude method
 	                if (xincludeHref.startsWith(XMLUtil.NS_ONTOMAVEN.getURI().toString())) {
     		            // duplicate include in Ontomaven namespace can be removed
     				    System.out.println("Warning: Should Never Happen: Deleting Duplicate Include");
@@ -211,8 +212,7 @@ public class CLImportationAlgorithm {
 		        }
 				
 				includeHistory.push(xincludeHref);
-				String filePath = corpus.catalog.getFileHash(xincludeHref);
-				Element referencedInclude = corpus.includes.getInclude(filePath, null);
+                Element referencedInclude = corpus.followInclude(e);
 							
 				if(processImport(referencedInclude, includeHistory, restrictHistory, pendingReplacements)){
 				    changed = true;
@@ -250,8 +250,8 @@ public class CLImportationAlgorithm {
         case Restrict:
             restrictHistory.pop();
             break;
-			default :
-			    break;
+		default :
+			break;
 				
 		}
 		return changed;
@@ -294,7 +294,7 @@ public class CLImportationAlgorithm {
 
 		//String hashCode = XMLUtil.getMD5Hash(titledElement);
         // TODO: hashCode only needs to be different for each includeURI 
-        // if titledElement has Import or include elements in it.
+        // if titledContent has an untitled Import or include element in it.
         String filePath = "includes/" + (++includeNumber).toString() + ".xml";
 		
 		// put the content of the titled text into a separate file
@@ -312,28 +312,17 @@ public class CLImportationAlgorithm {
 	}
 	
 	private Element getTitlingContent(Element titledElement) throws MissingCatalogEntryException, MissingIncludeEntryException {
-        Element titledContent;	    
         // extract the contents of the titling
-        if (!(titledElement.getChild("Restrict", XMLUtil.NS_XCL2) == null)) {
-            titledContent = titledElement.getChild("Restrict", XMLUtil.NS_XCL2);
-            return titledContent;
+        // It should be either a Restrict, Construct or Import in the XCL2 namespace
+        // or one of the above obtained by XInclude resolution
+        for (Element child: titledElement.getChildren()) {
+            child = corpus.followInclude(child);
+            if (Corpus.isRestrict(child) || Corpus.isConstruct(child) || Corpus.isImport(child)) {
+                return child;
+            }
         }
-        if (!(titledElement.getChild("Construct", XMLUtil.NS_XCL2) == null)) {
-            titledContent = titledElement.getChild("Construct", XMLUtil.NS_XCL2);
-            return titledContent;
-        }
-        if (!(titledElement.getChild("Import", XMLUtil.NS_XCL2) == null)) {
-            titledContent = titledElement.getChild("Import", XMLUtil.NS_XCL2);
-            return titledContent;
-        }
-        // A valid Titling element must have exactly one text in it.
-        // If the above conditionals were not satisfied, then the text element
-        // must be from an XInclude directive
-        if (!(titledElement.getChild("include", XMLUtil.NS_XINCLUDE) == null)) {
-            titledContent = corpus.followInclude(titledElement.getChild("include", XMLUtil.NS_XINCLUDE));
-            return titledContent;
-        }                    
-        return titledElement; //This should not happen if the CL document is valid.
+        return null; //This should not happen if the CL document is valid after XInclude resolution.
+        //TODO: throw an exception here
 	}
 	
 	

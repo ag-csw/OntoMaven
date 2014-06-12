@@ -369,14 +369,44 @@ public class Corpus {
 	        return nameElement == null ? null : nameElement.getAttributeValue("cri");
 	    }
 	    
-	    public static boolean isTitling(Content e) {
-	        switch(e.getCType()) {
-	            case Element : 
-	                return (((Element) e).getName().equals("Titling") && ((Element) e).getNamespace().equals(XMLUtil.NS_XCL2));
-	            default:
-	                return false;
-	        }
-	    }
+        public static boolean isTitling(Content e) {
+            switch(e.getCType()) {
+                case Element : 
+                    return (((Element) e).getName().equals("Titling") && ((Element) e).getNamespace().equals(XMLUtil.NS_XCL2));
+                default:
+                    return false;
+            }
+        }
+
+
+        public static boolean isRestrict(Content e) {
+            switch(e.getCType()) {
+                case Element : 
+                    return (((Element) e).getName().equals("Restrict") && ((Element) e).getNamespace().equals(XMLUtil.NS_XCL2));
+                default:
+                    return false;
+            }
+        }
+
+
+        public static boolean isConstruct(Content e) {
+            switch(e.getCType()) {
+                case Element : 
+                    return (((Element) e).getName().equals("Construct") && ((Element) e).getNamespace().equals(XMLUtil.NS_XCL2));
+                default:
+                    return false;
+            }
+        }
+
+
+        public static boolean isImport(Content e) {
+            switch(e.getCType()) {
+                case Element : 
+                    return (((Element) e).getName().equals("Import") && ((Element) e).getNamespace().equals(XMLUtil.NS_XCL2));
+                default:
+                    return false;
+            }
+        }
 
 
 	    public static boolean isXInclude(Content e) {
