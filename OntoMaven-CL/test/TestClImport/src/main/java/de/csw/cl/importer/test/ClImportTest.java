@@ -82,7 +82,9 @@ public class ClImportTest extends TestCase {
 			   { "caseM", null },
                { "caseN", null },
                { "caseP", null },
-               { "caseQ", null }
+               { "caseQ", null },
+               { "caseR", null },
+               { "caseS", null }
 			   };
 		return Arrays.asList(data);
 	}
