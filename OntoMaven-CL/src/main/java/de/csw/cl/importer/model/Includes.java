@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import org.jdom2.Document;
 import org.jdom2.Element;
 
+import de.csw.cl.importer.algorithm.FolderCreationException;
 import util.XMLUtil;
 
 /**
@@ -18,12 +19,32 @@ import util.XMLUtil;
  */
 public class Includes {
 	
-	private File includesDir;
 	
 	private HashMap<String, Element> includes = new HashMap<String, Element>();
 	
-	public Includes(File includesDir) {
-		this.includesDir = includesDir;
+	public Includes(File resultDir) {
+	    File includesDir = new File(resultDir, "includes/");
+		if(includesDir.exists()) {
+		    File[] includeFiles = includesDir.listFiles();
+		    for( File file: includeFiles) {
+		        String fileName = file.getName();
+		        String filePath = "includes/" + fileName;
+		        Document inc = XMLUtil.readLocalDoc(file);
+		        getInclude( filePath, inc.getRootElement());
+		        System.out.println("Loaded include file: " + filePath);
+		    }
+		}
+	}
+	
+	public boolean verifySequentialFileNames() {
+	    for ( int i = 1 ; i < includes.size() + 1 ; i++) {
+	        String filePath = "includes/" + i + ".xml";
+	        System.out.println("Checking :" + filePath);
+	        if(!(includes.containsKey(filePath))) {
+	            return false;
+	        }
+	    }
+	    return true;
 	}
 	
 	/**
@@ -38,34 +59,30 @@ public class Includes {
 	/**
 	 * Creates complete xml documents for all includes and saves them to the
 	 * includes directory.
+	 * @throws FolderCreationException 
 	 */
-	public void writeIncludes() {
+	public void writeIncludes(File resultDir) throws FolderCreationException {
+        if (includes.size() > 0) {
+            File outIncludesDir = new File(resultDir, "includes/");
+            if (!(outIncludesDir.exists() || outIncludesDir.mkdir())) {
+                throw new FolderCreationException("Error creating directory " + outIncludesDir.getAbsolutePath());
+            }
 		for (Entry<String, Element> entry : includes.entrySet()) {
-			String fileName = entry.getKey() + ".xml";
+			String filePath = entry.getKey();
 			Element rootElement = entry.getValue();
-			
-			if (!rootElement.getName().equals("Titling")) {
-				System.err.println("Discovered an include that is not a Titling");
-			}
-			
-			// GitHub issue #23
-			Element newRootElement = rootElement.getChild("Construct");			
-			if (newRootElement == null) {
-				newRootElement = rootElement.getChild("Import");
-			}
-			if (newRootElement == null) {
-				newRootElement = rootElement.getChild("Restrict");
-			}
-			if (newRootElement == null) {
-				// no text in this include - no need to save
-				continue;
-			}
-			
-			newRootElement.detach();
+						
+            //Element newRootElement = rootElement.clone();
+            Element newRootElement = rootElement;
 			
 			Document doc = new Document(newRootElement);
-			XMLUtil.writeXML(doc, new File(includesDir, fileName));
+            XMLUtil.performRecursivelAction(doc.getRootElement(), new XMLUtil.Action() {
+                public void doAction(Element e) {
+                    e.removeAttribute("key");
+                }
+            });
+            XMLUtil.writeXML(doc, new File(resultDir, filePath));
 		}
+        }
 	}
 	
 	/**
@@ -74,11 +91,12 @@ public class Includes {
 	 * @param fileHash
 	 * @param e
 	 */
-	public Element getInclude(String fileHash, Element e) {
-		Element existingInclude = includes.get(fileHash);
+	public Element getInclude(String filePath, Element e) {
+	    System.out.println("Attempting to retrieve include file: " + filePath);
+		Element existingInclude = includes.get(filePath);
 		if (existingInclude == null) {
 			existingInclude = e.clone();
-			includes.put(fileHash, e);
+			includes.put(filePath, existingInclude);
 		}
 		return existingInclude;
 	}

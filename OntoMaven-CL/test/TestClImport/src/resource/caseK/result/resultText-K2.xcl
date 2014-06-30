@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
-<Construct xmlns="http://iso-commonlogic.org/xcl2"  xmlns:xi="http://www.w3.org/2001/XInclude">
-  <xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseK%2FmyText-K1%23a" parse="xml"/>  
-  <xi:include href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseK%2FmyText-K1%23c" parse="xml"/>  
+<Construct xmlns="http://purl.org/xcl/2.0/"  xmlns:xi="http://www.w3.org/2001/XInclude">
+  <include xmlns="http://www.w3.org/2001/XInclude" href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseK%2FmyText-K1%23a" parse="xml"/>  
+  <include xmlns="http://www.w3.org/2001/XInclude" href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseK%2FmyText-K1%23c" parse="xml"/>  
   <Atom><Name>Q</Name><Name>b</Name></Atom>  
 </Construct>
 

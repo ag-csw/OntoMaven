@@ -1,4 +1,4 @@
-Case D. A circular importation - the imported text imports itself.
+Case P. A circular importation - the imported text imports itself inside a domain restriction.
 
 The nested include is commented out because it would create circularity.
 The importation in the titling statement is not removed because the assignment of a name to a text

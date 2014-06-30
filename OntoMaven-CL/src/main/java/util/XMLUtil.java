@@ -42,7 +42,7 @@ public class XMLUtil {
 	
 	public enum XMLParserCapability {SIMPLE, RESOLVE_XINLUDE, VALIDATE_AND_RESOLVE_XINCLUDE};
 	
-	public static final Namespace NS_XCL2 = Namespace.getNamespace("http://iso-commonlogic.org/xcl2");
+	public static final Namespace NS_XCL2 = Namespace.getNamespace("http://purl.org/xcl/2.0/");
 	public static final Namespace NS_ONTOMAVEN = Namespace.getNamespace("http://ontomaven.org");
 	public static final Namespace NS_XINCLUDE = Namespace.getNamespace("http://www.w3.org/2001/XInclude");
 	public static final Namespace NS_CATALOG = Namespace.getNamespace("urn:oasis:names:tc:entity:xmlns:xml:catalog");

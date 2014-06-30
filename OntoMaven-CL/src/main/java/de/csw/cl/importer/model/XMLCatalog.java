@@ -17,24 +17,52 @@ import util.XMLUtil;
  */
 public class XMLCatalog {
 	
-	private File catalogFile;
 	
 	private HashMap<String, String> uriMappings = new HashMap<String, String>();
 	
+	public XMLCatalog() {
+	    
+	}
+	
 	public XMLCatalog(File catalogFile) {
-		this.catalogFile = catalogFile;
+		if(catalogFile.exists()) {
+		    Document catalogDocument = XMLUtil.readLocalDoc(catalogFile);
+		    Element root = catalogDocument.getRootElement();
+		    for (Element c: root.getChildren()) {
+		        String uriString = c.getAttributeValue("uri");
+		        addMapping( c.getAttributeValue("name"), uriString );
+		    }
+		}
 	}
 	
 	public void addMapping(String uri, String fileHash) {
 		uriMappings.put(uri, fileHash);
 	}
 	
+	public void removeMapping(String uri) {
+	    uriMappings.remove(uri);
+	    
+	}
+	
+	public XMLCatalog clone() {
+	    XMLCatalog newCatalog = new XMLCatalog();
+	    for ( Entry<String, String> entry: this.getMappings().entrySet() ){
+	        newCatalog.addMapping(entry.getKey(), entry.getValue());
+	    }
+	    return newCatalog;
+	}
+	
 	public String getFileHash(String uri) {
 		return uriMappings.get(uri);
 	}
 	
-	public void write() {
+	public HashMap<String, String> getMappings() {
+	    return uriMappings;
+	}
+	
+	public void write(File resultDir) {
 	    if (uriMappings.size() > 0) {
+	        File outCatalogFile = new File(resultDir, "catalog.xml");
     		Document catalogDocument = new Document();
     		catalogDocument.setDocType(new DocType("catalog",
     						"-//OASIS//DTD XML Catalogs V1.1//EN",
@@ -45,11 +73,11 @@ public class XMLCatalog {
     		for (Entry<String, String> mapping : uriMappings.entrySet()) {
     			Element newElement = new Element("uri");
     			newElement.setAttribute("name", mapping.getKey());
-    			newElement.setAttribute("uri", "includes/" + mapping.getValue()+ ".xml");
+    			newElement.setAttribute("uri", mapping.getValue());
     			newElement.setNamespace(XMLUtil.NS_CATALOG);
     			catalogDocument.getRootElement().addContent(newElement);
     		}
-    		XMLUtil.writeXML(catalogDocument, catalogFile);
+    		XMLUtil.writeXML(catalogDocument, outCatalogFile);
 	    }
 	}
 	

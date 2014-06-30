@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
+<Construct xmlns="http://purl.org/xcl/2.0/">
+  <Titling>
+    <Name cri="http://example.org/caseR/myText-R1#a"/>
+    <Construct>
+        <include xmlns="http://www.w3.org/2001/XInclude" href="../external1/1.xcl"/>
+        <Atom><Name>P</Name><Name>a</Name></Atom>
+      </Construct>
+  </Titling>
+</Construct>

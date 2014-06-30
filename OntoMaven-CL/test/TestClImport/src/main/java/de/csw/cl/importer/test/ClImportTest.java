@@ -80,8 +80,11 @@ public class ClImportTest extends TestCase {
 			   { "caseK", null },
 			   { "caseL", null },
 			   { "caseM", null },
-			   { "caseN", null },
-               { "caseP", null }
+               { "caseN", null },
+               { "caseP", null },
+               { "caseQ", null },
+               { "caseR", null },
+               { "caseS", null }
 			   };
 		return Arrays.asList(data);
 	}
@@ -156,7 +159,7 @@ public class ClImportTest extends TestCase {
 		CLImportationAlgorithm algo = new CLImportationAlgorithm(testInputDir);
 		
 		try {
-			algo.run();
+			algo.run(testResultDir);
 			if (expectedThrowable != null ) {
 				System.err.println("Exception of type " + expectedThrowable.getCanonicalName() + " expected, but none has been thrown.");
 				fail("Exception of type " + expectedThrowable.getCanonicalName() + " expected, but none has been thrown.");
@@ -231,16 +234,25 @@ public class ClImportTest extends TestCase {
 		}
 		
 		// compare files in the result directory
-		
-		File[] testResultFiles = expectedResultDir.listFiles(new FileFilter() {
-			
-			public boolean accept(File file) {
-				return file.isFile() &&
-						(file.getName().toLowerCase().endsWith(".xml") ||
-								file.getName().toLowerCase().endsWith(".xcl"));
-			}
-		});
-		
+
+        File[] expectedResultFiles = expectedResultDir.listFiles(new FileFilter() {
+            
+            public boolean accept(File file) {
+                return file.isFile() &&
+                        (file.getName().toLowerCase().endsWith(".xml") ||
+                                file.getName().toLowerCase().endsWith(".xcl"));
+            }
+        });
+
+        File[] testResultFiles = testResultDir.listFiles(new FileFilter() {
+            
+            public boolean accept(File file) {
+                return file.isFile() &&
+                        (file.getName().toLowerCase().endsWith(".xml") ||
+                                file.getName().toLowerCase().endsWith(".xcl"));
+            }
+        });
+
 		if (!(testResultFiles == null)) {
     		for (File testResultFile : testResultFiles) {
     			if (testResultFile.isFile()) {
@@ -251,17 +263,30 @@ public class ClImportTest extends TestCase {
     				if (!XMLUtil.getCanonicalXML(testResultDocument).equals(XMLUtil.getCanonicalXML(expectedDocument))) {
     					XMLOutputter xmlOutputter = new XMLOutputter();
     					
-    					StringWriter out = new StringWriter();
+                        StringWriter out = new StringWriter();
+                        StringWriter outExpected = new StringWriter();
     					try {
-    						xmlOutputter.output(testResultDocument, out);
+                            xmlOutputter.output(testResultDocument, out);
+                            xmlOutputter.output(expectedDocument, outExpected);
     					} catch (IOException e) {
     						fail();
     					}
     					
-    					fail("Content not as expected in " + testResultFile.getName() + "\n\n" + out.toString());
+    					fail("Content not as expected in " + testResultFile.getName() + "\n\n" + out.toString()
+    					        + "\n\n" + "SHOULD BE" + "\n\n" + outExpected.toString() + "\n\n");
     				}
     			}
+    			else {
+    			    fail("Not a File");
+    			}
     		}
+    		
+		}
+		else {
+		    if(!(expectedResultFiles == null)){
+		        fail("No test results files when files are expected.");
+		    }
+		        
 		}
 		
 		// ... and now in the includes directory
@@ -271,15 +296,27 @@ public class ClImportTest extends TestCase {
 		File[] expectedIncludeFiles = expectedIncludesDir.listFiles(systemFileNameFilter);
 		
 		HashSet<String> expectedIncludeFileContents = new HashSet<String>();
+        ArrayList<String> missingFiles = new ArrayList<String>();
 
         if(!(expectedIncludeFiles == null)) {
     		for (File includeFile : expectedIncludeFiles) {
-    			String canonicalXML = XMLUtil.getCanonicalXML(XMLUtil.readLocalDoc(includeFile));
-    			expectedIncludeFileContents.add(canonicalXML);
+    			String expectedCanonicalXML = XMLUtil.getCanonicalXML(XMLUtil.readLocalDoc(includeFile));
+    			expectedIncludeFileContents.add(expectedCanonicalXML);
     			
-    			System.out.println("\n -- " + includeFile.getAbsolutePath() + " -->\n\n" + canonicalXML + "\n------------\n\n");
+    			System.out.println("\n -- " + includeFile.getAbsolutePath() + " -->\n\n" + expectedCanonicalXML + "\n------------\n\n");
+                Boolean missing = true;
+    	        if(!(testResultIncludeFiles == null)) {
+    	            for (File testIncludeFile : testResultIncludeFiles) {
+    	                String canonicalXML = XMLUtil.getCanonicalXML(XMLUtil.readLocalDoc(testIncludeFile));
+                        if (canonicalXML.equals(expectedCanonicalXML)) {
+                            missing = false;
+                        }    	                
+    	            }
+    	        }
+                if (missing)
+                    missingFiles.add(includeFile.getName());
+                }    		    
     		}
-        }
 		
 		ArrayList<String> unmatchedFiles = new ArrayList<String>();
 		
@@ -294,15 +331,25 @@ public class ClImportTest extends TestCase {
     		}
         }
 
-        if (!unmatchedFiles.isEmpty()) {
-			StringBuilder buf = new StringBuilder("Unmatched include files:\n");
+        if (!missingFiles.isEmpty()) {
+			StringBuilder buf = new StringBuilder("Missing include files:\n");
 			
-			for (String fileName : unmatchedFiles) {
+			for (String fileName : missingFiles) {
 				buf.append("includes/" + fileName);
 				buf.append('\n');
 			}
 			
 			fail(buf.toString());
+        }
+        if (!unmatchedFiles.isEmpty()) {
+            StringBuilder buf = new StringBuilder("Unmatched include files:\n");
+            
+            for (String fileName : unmatchedFiles) {
+                buf.append("includes/" + fileName);
+                buf.append('\n');
+            }
+            
+            fail(buf.toString());
         }
 	}
 	

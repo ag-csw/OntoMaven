@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
-<Construct xmlns="http://iso-commonlogic.org/xcl2">
+<Construct xmlns="http://purl.org/xcl/2.0/">
   <Titling>
-    <Name cri="http://example.org/caseN/myText-M1#a"/>
+    <Name cri="http://example.org/caseM/myText-M1#a"/>
     <Construct>
       <Atom><Name>P</Name><Name cri="http://example.org#a"/></Atom>
     </Construct>
   </Titling>  
   <Titling>
-    <Name cri="http://example.org/caseN/myText-M1#a"/>
+    <Name cri="http://example.org/caseM/myText-M1#a"/>
     <Construct>
       <!-- This version of the titling has an XML comment. -->
       <Atom><Name>P</Name><Name cri="http://example.org#a"/></Atom>
