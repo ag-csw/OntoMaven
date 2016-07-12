@@ -19,6 +19,7 @@ import de.csw.ontomaven.util.Util;
  * axioms of another ontology.
  * 
  * @goal TestEntailment
+ * @phase test
  */
 public class TestEntailment extends AbstractMojo {
 	
@@ -27,7 +28,7 @@ public class TestEntailment extends AbstractMojo {
 	 * a relative path in the maven project directory.
 	 * 
 	 * @parameter 	property="owlDirectory"
-	 * 				default-value="owl"
+	 * 				default-value=""
 	 * @required
 	 */
 	private String owlDirectory;

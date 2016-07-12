@@ -3,6 +3,8 @@ package de.csw.ontomaven;
 import java.io.File;
 import java.util.Set;
 
+import com.clarkparsia.owlapi.explanation.PelletExplanation;
+import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -10,9 +12,6 @@ import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.BufferingMode;
-
-import com.clarkparsia.owlapi.explanation.PelletExplanation;
-import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
 
 import de.csw.ontomaven.util.Util;
 
@@ -31,7 +30,7 @@ public class TestOntology extends AbstractMojo {
 	 * a relative path in the maven project directory.
 	 * 
 	 * @parameter 	property="owlDirectory"
-	 * 				default-value="owl"
+	 * 				default-value=""
 	 * @required
 	 */
 	private String owlDirectory;
@@ -83,7 +82,10 @@ public class TestOntology extends AbstractMojo {
 		File owlFile = new File(owlDirectory + File.separator + owlFileName);
 		OWLOntologyManager manager = Util.createManager();
 		OWLOntology ontology = Util.loadOntologyFile(manager, log, owlFile);
-		if (ontology == null) return;
+		if (ontology == null) {
+			log.warn("Could not load ontology " + owlFile.getAbsolutePath() );
+			return;
+		}
 		
 		
 		// Printing that the syntax was OK. If it would be not OK, the execution
@@ -101,7 +103,6 @@ public class TestOntology extends AbstractMojo {
 		PelletReasoner reasoner = new PelletReasoner(ontology, BufferingMode.BUFFERING);
 		Set<OWLAxiom> inconsistentAxioms = new PelletExplanation(reasoner)
 				.getInconsistencyExplanation();
-		
 	
 		// Printing result of consistency check
 		log.info("Testing consistency...");
@@ -111,7 +112,7 @@ public class TestOntology extends AbstractMojo {
 		}else{
 			log.info("Ontology inconsistent because of these axioms:");
 			for (OWLAxiom inconsistentAxiom: inconsistentAxioms){
-				log.info( " - " + inconsistentAxiom.toString());
+				log.info(" - " + inconsistentAxiom.toString());
 			}
 		}		
 		

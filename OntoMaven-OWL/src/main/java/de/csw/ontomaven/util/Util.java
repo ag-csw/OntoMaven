@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 
+import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
 import org.apache.maven.plugin.logging.Log;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.OWLXMLDocumentFormat;
@@ -27,7 +28,6 @@ import org.semanticweb.owlapi.util.InferredOntologyGenerator;
 import org.semanticweb.owlapi.util.OWLOntologyImportsClosureSetProvider;
 import org.semanticweb.owlapi.util.OWLOntologyMerger;
 
-import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -71,7 +71,7 @@ public class Util {
 			OWLOntologyDocumentSource source) {
 		if (manager == null)
 			manager = createManager();
-		
+
 		manager.setOntologyLoaderConfiguration(manager.getOntologyLoaderConfiguration().setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT));
 		return loadOntology(manager, log, source);
 	}
@@ -81,7 +81,6 @@ public class Util {
 	 * @param manager for loading the ontology
 	 * @param log for printing result and error messages
 	 * @param source from that the ontology will be loaded
-	 * @param config loading configuration
 	 * @return the loaded ontology
 	 */
 	public static OWLOntology loadOntology(OWLOntologyManager manager,
@@ -281,7 +280,7 @@ public class Util {
 	
 	/**
 	 * Converts an OWL API OWLOntology to a Jena OntModel.
-	 * @param ontology An OWL API OWLOntology.
+	 * @param owlOntology An OWL API OWLOntology.
 	 * @return The corresponding Jena OntModel.
 	 * @throws OWLOntologyStorageException
 	 * @author Ralph Sch�fermeier
@@ -304,7 +303,7 @@ public class Util {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			owlOntology.getOWLOntologyManager().saveOntology(owlOntology,
-					new RDFXMLDocumentFormat(), baos);
+			                                                 new RDFXMLDocumentFormat(), baos);
 		} catch (OWLOntologyStorageException e) {
 			log.error("Cannot create jena model of the ontology.", e);
 		}

@@ -30,6 +30,7 @@ import de.csw.ontomaven.util.Util;
  * local ontologies, if they are imported before.
  * 
  * @goal ImportOntologies
+ * @phase process-resources
  */
 public class ImportOntologies extends AbstractMojo {
   
