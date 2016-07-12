@@ -3,18 +3,16 @@ package de.csw.cl.importer;
 import java.io.File;
 import java.util.LinkedList;
 
-import org.apache.xml.security.Init;
 import org.jdom2.Document;
 import org.jdom2.Element;
 
-import util.XMLUtil;
 import de.csw.cl.importer.model.Catalog;
 import de.csw.cl.importer.model.Construct;
+import util.XMLUtil;
 /**
  * Loads transitive the imports of a given common logic file
  * in xml format.
  * 
- * @goal Import
  */
 //public class Main extends AbstractMojo {
  public class Main{

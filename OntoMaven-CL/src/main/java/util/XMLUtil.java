@@ -18,7 +18,6 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.xerces.util.XMLCatalogResolver;
 import org.apache.xml.security.Init;
 import org.apache.xml.security.c14n.Canonicalizer;
 import org.apache.xml.security.c14n.InvalidCanonicalizerException;

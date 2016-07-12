@@ -1,1 +1,6 @@
 xcl2.rnc
+.classpath
+.project
+OntoMaven-OWL/archiva/owlsyntax_archiva/target
+OntoMaven-OWL/target
+OntoMaven-OWL/test/test_mvnowlreport/target

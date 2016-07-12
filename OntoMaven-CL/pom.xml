@@ -47,6 +47,12 @@
 	<version>1.0</version>
 	<name>cl-import Maven Mojo</name>
 	<url>http://maven.apache.org</url>
+	<repositories>
+		<repository>
+			<id>internal repo</id>
+			<url>file://${basedir}/lib</url>
+		</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
@@ -54,34 +60,29 @@
 			<version>2.0</version>
 		</dependency>
 		<dependency>
-			<groupId>xml-security</groupId>
-			<artifactId>xmlsec</artifactId>
-			<version>1.0.5D2</version>
+			<groupId>org.dom4j</groupId>
+			<artifactId>dom4j</artifactId>
+			<version>2.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jdom</groupId>
-			<artifactId>jdom2</artifactId>
-			<version>2.0.5</version>
+			<artifactId>jdom</artifactId>
+			<version>2.0.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.maven.plugins</groupId>
-			<artifactId>maven-plugin-plugin</artifactId>
-			<version>2.0</version>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>2.6.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.eclipse.core</groupId>
-			<artifactId>runtime</artifactId>
-			<version>3.3.100-v20070530</version>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.6.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-plugin-api</artifactId>
-			<version>2.0</version>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.17</version>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.2</version>
 		</dependency>
 		<dependency>
 			<groupId>xerces</groupId>
@@ -89,19 +90,14 @@
 			<version>2.11.0</version>
 		</dependency>
 		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>xalan</artifactId>
-			<version>2.6.0</version>
+			<groupId>xml-security</groupId>
+			<artifactId>xml-security</artifactId>
+			<version>1.0.4</version>
 		</dependency>
 		<dependency>
-			<groupId>xml-resolver</groupId>
-			<artifactId>xml-resolver</artifactId>
-			<version>1.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.3.3</version>
+			<groupId>thaiopensource</groupId>
+			<artifactId>jing</artifactId>
+			<version>20140531_xmlns_fix</version>
 		</dependency>
 	</dependencies>
 	<build>

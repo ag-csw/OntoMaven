@@ -12,7 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jdom2.Content;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -36,7 +37,7 @@ import util.XMLUtil;
 public class Corpus {
 
     //TODO : why is logging not working here for the JUnit tests?
-	private static Logger LOG = Logger.getLogger(Corpus.class);
+	private static Logger LOG = LogManager.getLogger(Corpus.class);
 	
 	
     // The top-level XML documents of the corpus.

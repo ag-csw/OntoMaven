@@ -3,8 +3,6 @@
  */
 package de.csw.cl.importer.algorithm;
 
-import static util.XMLUtil.NS_XCL2;
-
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 //import java.net.URLDecoder;
@@ -15,19 +13,19 @@ import java.util.Queue;
 import java.util.Stack;
 import java.util.TreeSet;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jdom2.Comment;
-import org.jdom2.Content;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.Parent;
 import org.jdom2.output.XMLOutputter;
 
-import util.XMLUtil;
 import de.csw.cl.importer.model.ConflictingTitlingException;
 import de.csw.cl.importer.model.Corpus;
 import de.csw.cl.importer.model.MissingCatalogEntryException;
 import de.csw.cl.importer.model.MissingIncludeEntryException;
+import util.XMLUtil;
 
 /**
  * @author ralph
@@ -35,7 +33,7 @@ import de.csw.cl.importer.model.MissingIncludeEntryException;
  */
 public class CLImportationAlgorithm {
 	
-    private static Logger LOG = Logger.getLogger(CLImportationAlgorithm.class);
+    private static Logger LOG = LogManager.getLogger(CLImportationAlgorithm.class);
 
     private enum ELEMENT_TYPE {Titling, Restrict, Import, Construct, include, other}
 	

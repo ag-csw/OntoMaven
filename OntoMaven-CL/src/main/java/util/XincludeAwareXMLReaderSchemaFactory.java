@@ -10,7 +10,6 @@ import javax.xml.validation.Schema;
 
 import org.jdom2.JDOMException;
 import org.jdom2.input.JDOMParseException;
-import org.jdom2.input.sax.XMLReaderJAXPFactory;
 import org.jdom2.input.sax.XMLReaderSchemaFactory;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;

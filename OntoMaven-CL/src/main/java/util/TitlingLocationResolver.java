@@ -9,17 +9,15 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jdom2.Document;
 import org.jdom2.Element;
-import org.jdom2.Namespace;
 import org.jdom2.filter.ElementFilter;
 import org.jdom2.util.IteratorIterable;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import util.XMLUtil;
 
 /**
  * 
@@ -27,7 +25,7 @@ import util.XMLUtil;
  */
 public class TitlingLocationResolver implements EntityResolver {
 	
-	private static final Logger LOG = Logger.getLogger(TitlingLocationResolver.class);
+	private static final Logger LOG = LogManager.getLogger(TitlingLocationResolver.class);
 	
 	private HashMap<String, InputSource> titlingLocationMap;
 	
