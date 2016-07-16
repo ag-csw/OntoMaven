@@ -88,7 +88,6 @@ public class Util {
 			OWLOntologyDocumentSource source) {
 		if (manager == null)
 			manager = createManager();
-
 		manager.setOntologyLoaderConfiguration(manager.getOntologyLoaderConfiguration().setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT));
 		return loadOntology(manager, log, source);
 	}
@@ -240,9 +239,8 @@ public class Util {
 		log.info("Inferring axioms...");
 		int originalAxiomsCount = ontology.getAxiomCount();
 		new InferredOntologyGenerator(new PelletReasoner(ontology,
-				BufferingMode.BUFFERING)).fillOntology(manager.getOWLDataFactory(), ontology);
-		log.info((ontology.getAxiomCount()
-				- originalAxiomsCount) + " axioms successfully inferred.");
+		                                                 BufferingMode.BUFFERING)).fillOntology(manager.getOWLDataFactory(), ontology);
+		log.info((ontology.getAxiomCount() - originalAxiomsCount) + " axioms successfully inferred.");
 		log.info("");
 	}
 
@@ -298,6 +296,8 @@ public class Util {
 	/**
 	 * Converts an OWL API OWLOntology to a Jena OntModel.
 	 * @param owlOntology An OWL API OWLOntology.
+	 * @param withImports Include imports.
+	 * @param log The logger.
 	 * @return The corresponding Jena OntModel.
 	 * @throws OWLOntologyStorageException
 	 * @author Ralph Sch�fermeier
