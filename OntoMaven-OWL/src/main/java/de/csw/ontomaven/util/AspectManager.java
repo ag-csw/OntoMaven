@@ -82,8 +82,7 @@ public class AspectManager {
 			// Creating entityRemover, which removes an entity and its users
 			Set<OWLOntology> ontologies = new HashSet<OWLOntology>();
 			ontologies.add(ontology);
-			OWLEntityRemover entityRemover = new OWLEntityRemover(manager,
-					ontologies);
+			OWLEntityRemover entityRemover = new OWLEntityRemover(ontologies);
 			
 			if(!isEffectiveEntity(entity))
 				entity.accept(entityRemover);
@@ -98,7 +97,7 @@ public class AspectManager {
 	private boolean isEffectiveEntity(OWLEntity entity) {
 		boolean isEffective = true;
 		for (OWLAnnotationAssertionAxiom assertion:
-			entity.getAnnotationAssertionAxioms(ontology)){
+			ontology.getAnnotationAssertionAxioms(entity.getIRI())){
 			if (isAspectAssertion(assertion)){
 				if(!isEffectiveAspectAssertion(assertion))
 					return true; // OR: one assertion says yes
@@ -241,8 +240,8 @@ public class AspectManager {
 	 */
 	private void findAllAnnotationAssertions(){
 		for (OWLEntity entity: ontology.getSignature())
-			annotationAssertions.addAll(entity
-					.getAnnotationAssertionAxioms(ontology));
+			annotationAssertions.addAll(
+					ontology.getAnnotationAssertionAxioms(entity.getIRI()));
 	}
 	
 	/**

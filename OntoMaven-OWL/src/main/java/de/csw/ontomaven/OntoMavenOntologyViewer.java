@@ -21,7 +21,7 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.io.RDFXMLOntologyFormat;
+import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
@@ -29,16 +29,16 @@ import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import org.semanticweb.owlapi.util.OWLOntologyImportsClosureSetProvider;
 import org.semanticweb.owlapi.util.OWLOntologyMerger;
 
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+
 import owl2prefuse.graph.GraphDisplay;
 import owl2prefuse.graph.GraphPanel;
 import owl2prefuse.graph.OWLGraphConverter;
 import prefuse.data.Graph;
 import prefuse.data.io.DataIOException;
 import prefuse.data.io.GraphMLReader;
-
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 public class OntoMavenOntologyViewer {
 	public static void main(String[] args) {
@@ -181,7 +181,7 @@ public class OntoMavenOntologyViewer {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			owlOntology.getOWLOntologyManager().saveOntology(owlOntology,
-					new RDFXMLOntologyFormat(), baos);
+					new RDFXMLDocumentFormat(), baos);
 		} catch (OWLOntologyStorageException e) {
 			System.err.println("Cannot create jena model of the ontology. "
 					+ System.lineSeparator() + e.getMessage());

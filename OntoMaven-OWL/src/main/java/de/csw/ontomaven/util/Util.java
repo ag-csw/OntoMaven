@@ -6,16 +6,17 @@ import java.io.File;
 
 import org.apache.maven.plugin.logging.Log;
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.formats.OWLXMLDocumentFormat;
+import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
 import org.semanticweb.owlapi.io.FileDocumentSource;
 import org.semanticweb.owlapi.io.IRIDocumentSource;
 import org.semanticweb.owlapi.io.OWLOntologyDocumentSource;
-import org.semanticweb.owlapi.io.OWLXMLOntologyFormat;
-import org.semanticweb.owlapi.io.RDFXMLOntologyFormat;
 import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.MissingImportHandlingStrategy;
 import org.semanticweb.owlapi.model.OWLAxiom;
+import org.semanticweb.owlapi.model.OWLDocumentFormat;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
-import org.semanticweb.owlapi.model.OWLOntologyFormat;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import org.semanticweb.owlapi.model.UnloadableImportException;
@@ -71,7 +72,7 @@ public class Util {
 		if (manager == null)
 			manager = createManager();
 		
-		manager.setSilentMissingImportsHandling(true);
+		manager.setOntologyLoaderConfiguration(manager.getOntologyLoaderConfiguration().setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT));
 		return loadOntology(manager, log, source);
 	}
 	/**
@@ -155,14 +156,14 @@ public class Util {
 			Log log) {
 		
 		OWLOntologyManager manager = Util.createManager();
-		IRI iri = ontology.getOntologyID().getOntologyIRI();
+		IRI iri = ontology.getOntologyID().getOntologyIRI().get();
 		log.info("");
 		log.info("Saving ontology " + iri);
 		log.info("to");
 		log.info(saveFile.getAbsolutePath());
 		log.info("");
 		try {
-			OWLOntologyFormat format = new OWLXMLOntologyFormat();
+			OWLDocumentFormat format = new OWLXMLDocumentFormat();
 			manager.saveOntology(ontology, format, IRI.create(saveFile));
 		} catch (OWLOntologyStorageException e) {
 			log.error("Cannot store ontology " + iri, e);
@@ -191,7 +192,7 @@ public class Util {
 	public static boolean canLoadOntologyByIgnoringMissingImports(IRI iri) {
 		try {
 			OWLOntologyManager manager = createManager();
-			manager.setSilentMissingImportsHandling(true);
+			manager.setOntologyLoaderConfiguration(manager.getOntologyLoaderConfiguration().setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT));
 			manager.loadOntologyFromOntologyDocument(
 					new IRIDocumentSource(iri));
 			return true;
@@ -223,7 +224,7 @@ public class Util {
 		log.info("Inferring axioms...");
 		int originalAxiomsCount = ontology.getAxiomCount();
 		new InferredOntologyGenerator(new PelletReasoner(ontology,
-				BufferingMode.BUFFERING)).fillOntology(manager, ontology);
+				BufferingMode.BUFFERING)).fillOntology(manager.getOWLDataFactory(), ontology);
 		log.info((ontology.getAxiomCount()
 				- originalAxiomsCount) + " axioms successfully inferred.");
 		log.info("");
@@ -239,7 +240,7 @@ public class Util {
 	 * @param ontology to be cleaned of twice axioms
 	 * @param manager for removing axioms
 	 * 
-	 * @author Ralph Schäfermeier
+	 * @author Ralph Schï¿½fermeier
 	 */
 	public static void removeTwiceAxiomsWithAnnotations(OWLOntology ontology,
 			OWLOntologyManager manager) {
@@ -283,7 +284,7 @@ public class Util {
 	 * @param ontology An OWL API OWLOntology.
 	 * @return The corresponding Jena OntModel.
 	 * @throws OWLOntologyStorageException
-	 * @author Ralph Schäfermeier
+	 * @author Ralph Schï¿½fermeier
 	 */
 	public static OntModel owlOntologyToJenaModel(OWLOntology owlOntology,
 			boolean withImports, Log log) {
@@ -303,7 +304,7 @@ public class Util {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			owlOntology.getOWLOntologyManager().saveOntology(owlOntology,
-					new RDFXMLOntologyFormat(), baos);
+					new RDFXMLDocumentFormat(), baos);
 		} catch (OWLOntologyStorageException e) {
 			log.error("Cannot create jena model of the ontology.", e);
 		}
