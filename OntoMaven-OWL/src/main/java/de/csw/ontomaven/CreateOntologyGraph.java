@@ -23,6 +23,8 @@ import de.csw.ontomaven.util.Util;
  * 
  * @goal CreateOntologyGraph
  * @phase site
+ * @configurator include-project-dependencies
+ * @requiresDependencyResolution compile+runtime
  */
 public class CreateOntologyGraph extends AbstractMojo {
 	
@@ -101,7 +103,7 @@ public class CreateOntologyGraph extends AbstractMojo {
 		
 		// Loading ontology
 		OWLOntologyManager manager = Util.createManager();
-		File owlFile = new File(owlDirectory + File.separator + owlFileName);
+		File owlFile = Util.resolveFile(new File(owlDirectory + File.separator + owlFileName));
 		OWLOntology ontology = Util.loadOntologyFile(manager, log, owlFile);
 		if (ontology == null) return; // Ontology not loaded
 		

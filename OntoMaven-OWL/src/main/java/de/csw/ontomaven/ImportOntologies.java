@@ -31,6 +31,8 @@ import de.csw.ontomaven.util.Util;
  * 
  * @goal ImportOntologies
  * @phase process-resources
+ * @configurator include-project-dependencies
+ * @requiresDependencyResolution compile+runtime
  */
 public class ImportOntologies extends AbstractMojo {
   
@@ -87,15 +89,18 @@ public class ImportOntologies extends AbstractMojo {
 		
 		
 		// Loading main ontology
-		File owlFile = new File(owlDirectory + File.separator + owlFileName);
+		File owlFile = Util.resolveFile(new File(owlDirectory + File.separator + owlFileName));
 		OWLOntology ontology = Util.loadOntologyByIgnoringMissingImports(
 				null, log, new FileDocumentSource(owlFile));
 		if (ontology == null) return; // ontology not loaded
 		
 		
 		// Creating catalog
-		File catalogFile = new File(owlDirectory + File.separator
-				+ catalogFileName);
+		File catalogFile = Util.relativeToFile(new File(owlDirectory + File.separator + catalogFileName),
+											   owlFile);
+		if (!catalogFile.getParentFile().exists()) {
+			catalogFile.getParentFile().mkdirs();
+		}
 		Catalog catalog = new Catalog(catalogFile, log);
 		
 		
@@ -143,8 +148,8 @@ public class ImportOntologies extends AbstractMojo {
 			if (!catalog.isImportExisting(currentURL)){
 				String fileName = createFileName(importsDir, currentIRI);
 				catalog.addImport(currentURL, fileName);
-				File saveFile = new File(importsDir.getAbsolutePath() +
-						File.separator + fileName);
+				File saveFile = Util.relativeToFile(new File(importsDir.getPath() + File.separator + fileName),
+													owlFile);
 				Util.saveOntology(currentOntology, saveFile, log);
 			} else {
 				log.info("Ontology already existing and won't be imported.");
@@ -190,8 +195,12 @@ public class ImportOntologies extends AbstractMojo {
 		
 		// if the filename was not empty but it did not have the
 		// ".owl"-extenstion, add this extension to it.
-		if (!fileName.endsWith(".owl"))
-			fileName += ".owl";
+		if (!fileName.endsWith(".owl")) {
+			if (!fileName.endsWith(".")) {
+				fileName += ".";
+			}
+			fileName += "owl";
+		}
 			
 		// Check if there is a file with the same name
 		boolean isNameValid = true;

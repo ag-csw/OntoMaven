@@ -20,6 +20,8 @@ import de.csw.ontomaven.util.Util;
  * 
  * @goal TestEntailment
  * @phase test
+ * @configurator include-project-dependencies
+ * @requiresDependencyResolution compile+runtime
  */
 public class TestEntailment extends AbstractMojo {
 	

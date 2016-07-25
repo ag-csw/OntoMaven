@@ -46,6 +46,8 @@ import de.csw.ontomaven.util.Util;
  *
  * @goal CreateOntologyReport
  * @phase site
+ * @configurator include-project-dependencies
+ * @requiresDependencyResolution compile+runtime
  */
 public class CreateOntologyReport extends AbstractMavenReport {
 
@@ -142,7 +144,7 @@ public class CreateOntologyReport extends AbstractMavenReport {
 		Util.printHead("Creating ontology report...", log);
 
 		// 1: Loading ontology
-		File owlFile = new File(owlDirectory + File.separator + owlFileName);
+		File owlFile = Util.resolveFile(new File(owlDirectory + File.separator + owlFileName));
 		OWLOntologyManager manager = Util.createManager();
 		OWLOntology ontology = Util.loadOntologyFile(manager, log, owlFile);
 		if (ontology == null) return; // Ontology not loaded
@@ -176,12 +178,12 @@ public class CreateOntologyReport extends AbstractMavenReport {
 
 		// 3: Adding title
 		log.info("Adding ontology name...");
-		IRI ontologyIRI = ontology.getOntologyID().getOntologyIRI().get();
+		String ontologyName = ontology.getOntologyID().getOntologyIRI().isPresent() ? ontology.getOntologyID().getOntologyIRI().get().toString() : "<MISSING NAME>";
 		sink.section1();
 		sink.sectionTitle1();
 		sink.text("Ontology Report");
 		sink.lineBreak();
-		sink.text(ontologyIRI.toString());
+		sink.text(ontologyName);
 		sink.sectionTitle1_();
 
 
@@ -767,6 +769,15 @@ public class CreateOntologyReport extends AbstractMavenReport {
 
 		log.info("Report successfully created...");
 		Util.printTail(log);
+
+		//18: Ensure destination folder(s) are created
+		if (getOutputName().contains(File.separator)) {
+			String target = getOutputDirectory() + File.separator + getOutputName();
+			File targetDir = new File(target);
+			if (!targetDir.exists()) {
+				targetDir.mkdirs();
+			}
+		}
 	}
 
 	/** Checks, in which format the ontology is.*/

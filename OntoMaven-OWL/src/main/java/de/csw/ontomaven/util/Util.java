@@ -3,6 +3,8 @@ package de.csw.ontomaven.util;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
 import org.apache.maven.plugin.logging.Log;
@@ -45,15 +47,30 @@ public class Util {
 	public static OWLOntology loadOntologyFile(
 			OWLOntologyManager ontologyManager, Log log, File owlFile) {
 		
+		owlFile = resolveFile(owlFile);
 		if (owlFile == null || !owlFile.exists()){
 			log.error(owlFile.getAbsolutePath() + " not existing");
 			return null;
 		}
-		
+
 		return loadOntology(ontologyManager, log, new FileDocumentSource(
 				owlFile));
 	}
-	
+
+	public static File resolveFile(File owlFile) {
+		 if (owlFile != null && !owlFile.exists()) {
+			URL url = Thread.currentThread().getContextClassLoader().getResource(owlFile.getPath());
+			if (url != null) {
+				try {
+					owlFile = new File(url.toURI());
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return owlFile;
+	}
+
 	/**
 	 * This method first creates a configuration for loading ontology.
 	 * It is necessary because of missing imports. There could be some
@@ -314,7 +331,34 @@ public class Util {
 				.createOntologyModel(OntModelSpec.OWL_MEM);
 		jenaModel.read(bais, null, "RDF/XML");
 		return jenaModel;
-	}	
-	
-	
+	}
+
+
+	/**
+	 * Aligns the (relative) path of a File to the absolute path of another one
+	 *
+	 * E.g. given /absolute/relative/source.x and relative/target.y,
+	 * this method returns /absolute/relative/target.y
+	 *
+	 * @param absolutePathFile
+	 * @param relativePathFile
+	 * @return an absolute-path file based on the maximum overlap between the absolute and relative paths of the two input argument files
+	 */
+	public static File relativeToFile(File relativePathFile, File absolutePathFile) {
+		if ( (! absolutePathFile.isAbsolute()) || relativePathFile.isAbsolute() ) {
+			return relativePathFile;
+		}
+		return new File(concatMerge(absolutePathFile.getParent(),relativePathFile.getPath()));
+	}
+
+
+	public static String concatMerge(String left, String right) {
+		int max = Math.min(left.length(),right.length());
+		for (int j=max; j>0; j--) {
+			if (left.regionMatches(left.length() - j, right, 0, j)) {
+				return left + right.substring(j, right.length());
+			}
+		}
+		return left + right;
+	}
 }
