@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+<Ontology xmlns="http://www.w3.org/2002/07/owl#"
+     xml:base="http://protege.stanford.edu/plugins/owl/protege"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     ontologyIRI="http://protege.stanford.edu/plugins/owl/protege">
+    <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+    <Prefix name="xml" IRI="http://www.w3.org/XML/1998/namespace"/>
+    <Prefix name="xsd" IRI="http://www.w3.org/2001/XMLSchema#"/>
+    <Prefix name="rdfs" IRI="http://www.w3.org/2000/01/rdf-schema#"/>
+    <Declaration>
+        <AnnotationProperty IRI="#todoProperty"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="http://www.owl-ontologies.com/2005/08/07/xsp.owl#maxExclusive"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#FROM"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#subclassesDisjoint"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#probeClass"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#abstract"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="http://www.owl-ontologies.com/2005/08/07/xsp.owl#fractionDigits"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="http://www.owl-ontologies.com/2005/08/07/xsp.owl#maxInclusive"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#usedLanguage"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#DIRECTED-BINARY-RELATION"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#PAL-NAME"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#allowedParent"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="http://www.owl-ontologies.com/2005/08/07/xsp.owl#pattern"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="http://www.owl-ontologies.com/2005/08/07/xsp.owl#minInclusive"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#PAL-RANGE"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="http://www.owl-ontologies.com/2005/08/07/xsp.owl#minLength"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#PAL-CONSTRAINT"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#excludedTest"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="http://www.owl-ontologies.com/2005/08/07/xsp.owl#minExclusive"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="http://www.owl-ontologies.com/2005/08/07/xsp.owl#base"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="http://www.owl-ontologies.com/2005/08/07/xsp.owl#totalDigits"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#TO"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="http://www.owl-ontologies.com/2005/08/07/xsp.owl#maxLength"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#PAL-DESCRIPTION"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#PAL-STATEMENT"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#SLOT-CONSTRAINTS"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="http://www.owl-ontologies.com/2005/08/07/xsp.owl#length"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#todoPrefix"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#readOnly"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="#defaultLanguage"/>
+    </Declaration>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#FROM"/>
+        <Class IRI="#DIRECTED-BINARY-RELATION"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#TO"/>
+        <Class IRI="#DIRECTED-BINARY-RELATION"/>
+    </ObjectPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#PAL-DESCRIPTION"/>
+        <Class IRI="#PAL-CONSTRAINT"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#PAL-NAME"/>
+        <Class IRI="#PAL-CONSTRAINT"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#PAL-RANGE"/>
+        <Class IRI="#PAL-CONSTRAINT"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#PAL-STATEMENT"/>
+        <Class IRI="#PAL-CONSTRAINT"/>
+    </DataPropertyDomain>
+    <DataPropertyRange>
+        <DataProperty IRI="#PAL-DESCRIPTION"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="#PAL-NAME"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="#PAL-RANGE"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="#PAL-STATEMENT"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+</Ontology>
+
+
+
+<!-- Generated by the OWL API (version 4.1.4.20160202-2327) https://github.com/owlcs/owlapi -->
+

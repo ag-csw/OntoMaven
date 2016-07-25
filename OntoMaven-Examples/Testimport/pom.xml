@@ -1,0 +1,82 @@
+<!--
+  Copyright 2013 Corporate Semantic Web, Freie Universitaet Berlin
+  
+  This file is part of the Coporate Semantic Web Project.
+  
+  This work has been partially supported by the "InnoProfile-Corporate Semantic Web" project funded by the German Federal
+  Ministry of Education and Research (BMBF) and the BMBF Innovation Initiative for the New German Laender - Entrepreneurial Regions.
+  
+  http://www.corporate-semantic-web.de/
+  
+  
+  Freie Universitaet Berlin
+  Copyright (c) 2007-2013
+  
+  
+  Institut fuer Informatik
+  Working Group Coporate Semantic Web
+  Koenigin-Luise-Strasse 24-26
+  14195 Berlin
+  
+  http://www.mi.fu-berlin.de/en/inf/groups/ag-csw/
+  
+  
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+    http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>de.csw.MvnOnt</groupId>
+    <artifactId>Testimport</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Testimport</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>de.csw</groupId>
+                <artifactId>ontomaven</artifactId>
+                <version>1.0-SNAPSHOT</version>
+                <configuration>
+                    <owlDirectory>owl</owlDirectory>
+                    <owlFileName>pizza.owl</owlFileName>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>ImportOntologies</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>
