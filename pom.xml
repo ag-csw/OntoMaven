@@ -1,0 +1,20 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>de.csw</groupId>
+    <artifactId>ontomaven-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0</version>
+
+    <name>OntoMaven Project</name>
+
+    <modules>
+        <module>OntoMaven-OWL</module>
+        <module>OntoMaven-CL</module>
+        <module>OntoMaven-Examples</module>
+    </modules>
+
+</project>

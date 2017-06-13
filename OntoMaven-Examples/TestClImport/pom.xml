@@ -37,8 +37,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.csw.MvnOnt</groupId>
-    <artifactId>TestClImport</artifactId>
+    <groupId>de.csw.test</groupId>
+    <artifactId>test_CL_import</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -52,7 +52,7 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.ontomaven</groupId>
+                <groupId>de.csw</groupId>
                 <artifactId>clImport</artifactId>
                 <version>1.0</version>
                 <configuration>
