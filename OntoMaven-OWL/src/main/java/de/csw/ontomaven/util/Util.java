@@ -160,18 +160,24 @@ public class Util {
 	 */
 	public static OWLOntologyManager createManager() {
 		return OWLManager.createOWLOntologyManager();
-	}	
-	
-	/**
-	 * Save a given ontology into a given file.
-	 * 
-	 * @param ontology to be saved
-	 * @param saveFile in which the ontology will be saved
-	 * @param log for printing result and error messages
-	 */
-	public static void saveOntology(OWLOntology ontology, File saveFile,
-			Log log) {
-		
+	}
+
+	public static void saveOntology( OWLOntology ontology, File saveFile, Log log ) {
+		saveOntology( ontology, saveFile, log, true );
+	}
+
+		/**
+		 * Save a given ontology into a given file.
+		 *  @param ontology to be saved
+		 * @param saveFile in which the ontology will be saved
+		 * @param log for printing result and error messages
+		 * @param forceRefresh overwrite files even when present
+		 */
+	public static void saveOntology( OWLOntology ontology, File saveFile,
+	                                 Log log, boolean forceRefresh ) {
+		if ( saveFile.exists() && ! forceRefresh ) {
+			return;
+		}
 		OWLOntologyManager manager = Util.createManager();
 		IRI iri = ontology.getOntologyID().getOntologyIRI().get();
 		log.info("");
@@ -180,6 +186,9 @@ public class Util {
 		log.info(saveFile.getAbsolutePath());
 		log.info("");
 		try {
+			if ( !saveFile.getParentFile().exists() ) {
+				saveFile.getParentFile().mkdirs();
+			}
 			OWLDocumentFormat format = new OWLXMLDocumentFormat();
 			manager.saveOntology(ontology, format, IRI.create(saveFile));
 		} catch (OWLOntologyStorageException e) {
@@ -365,7 +374,10 @@ public class Util {
 	}
 
 
-	public static void fetchOntologyDocumentFromURL( String owlFileURL, String targetFileName ) throws IOException, OWLOntologyCreationException, OWLOntologyStorageException {
+	public static void fetchOntologyDocumentFromURL( String owlFileURL,
+	                                                 String targetFileName,
+	                                                 Log log,
+	                                                 boolean forceRefresh ) throws IOException, OWLOntologyCreationException, OWLOntologyStorageException {
 		URL sourceUrl = null;
 		try {
 			sourceUrl = new URL( owlFileURL );
@@ -388,10 +400,7 @@ public class Util {
 			OWLOntology onto = mgr.loadOntologyFromOntologyDocument( sourceUrl.openStream() );
 
 			File t = new File( targetFileName );
-			if ( ! t.getParentFile().exists() ) {
-				t.getParentFile().mkdirs();
-			}
-			mgr.saveOntology( onto, new FileOutputStream( t ) );
+			saveOntology( onto, t, log, forceRefresh );
 		}
 	}
 }

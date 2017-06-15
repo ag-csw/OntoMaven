@@ -80,6 +80,15 @@ public class ImportOntologies extends AbstractMojo {
 	private String importDirectory;
 	
 	/**
+	 * Overwrite files when present
+	 *
+	 * @parameter 	property="forceRefresh"
+	 * 				default-value="false"
+	 * @optional
+	 */
+	private boolean forceRefresh = false;
+
+	/**
 	 * Name of the catalog file, where the imports are registered.
 	 * 
 	 * @parameter 	property="catalogFileName"
@@ -104,7 +113,7 @@ public class ImportOntologies extends AbstractMojo {
 		File owlFile = Util.resolveFile(new File(owlDirectory + File.separator + owlFileName));
 		if (! owlFile.exists()) {
 			try {
-				Util.fetchOntologyDocumentFromURL(owlFileURL,owlFile.getAbsolutePath());
+				Util.fetchOntologyDocumentFromURL(owlFileURL,owlFile.getAbsolutePath(),log,forceRefresh);
 			} catch ( IOException e ) {
 				e.printStackTrace();
 			} catch ( OWLOntologyCreationException e ) {
@@ -175,7 +184,7 @@ public class ImportOntologies extends AbstractMojo {
 				catalog.addImport(currentURL, fileName);
 				File saveFile = Util.relativeToFile(new File(importsDir.getPath() + File.separator + fileName),
 													owlFile);
-				Util.saveOntology(currentOntology, saveFile, log);
+				Util.saveOntology(currentOntology, saveFile, log, forceRefresh);
 			} else {
 				log.info("Ontology already existing and won't be imported.");
 			}
