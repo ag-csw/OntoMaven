@@ -1,19 +1,20 @@
 package de.csw.ontomaven;
 
-import java.io.File;
-import java.util.Set;
-
-import com.clarkparsia.owlapi.explanation.PelletExplanation;
-import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
+import com.clarkparsia.owlapi.explanation.BlackBoxExplanation;
+import com.clarkparsia.owlapi.explanation.HSTExplanationGenerator;
+import de.csw.ontomaven.util.Util;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.semanticweb.HermiT.Configuration;
+import org.semanticweb.HermiT.ReasonerFactory;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.reasoner.BufferingMode;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
-import de.csw.ontomaven.util.Util;
+import java.io.File;
+import java.util.Set;
 
 /**
  * Tests an ontology regarding the syntax and consistency. The
@@ -99,10 +100,17 @@ public class TestOntology extends AbstractMojo {
 		
 		
 		// Getting inconsistent axioms
-		PelletExplanation.setup();
-		PelletReasoner reasoner = new PelletReasoner(ontology, BufferingMode.BUFFERING);
-		Set<OWLAxiom> inconsistentAxioms = new PelletExplanation(reasoner)
-				.getInconsistencyExplanation();
+		ReasonerFactory factory = new ReasonerFactory();
+
+		Configuration configuration=new Configuration();
+		configuration.throwInconsistentOntologyException=false;
+
+		OWLReasoner reasoner = factory.createReasoner( ontology, configuration );
+		BlackBoxExplanation exp=new BlackBoxExplanation( ontology, factory, reasoner );
+		HSTExplanationGenerator multExplanator=new HSTExplanationGenerator( exp );
+		// Now we can get explanations for the unsatisfiability.
+
+		Set<OWLAxiom> inconsistentAxioms = multExplanator.getExplanation( ontology.getOWLOntologyManager().getOWLDataFactory().getOWLThing() );
 	
 		// Printing result of consistency check
 		log.info("Testing consistency...");

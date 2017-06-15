@@ -1,13 +1,10 @@
 package de.csw.ontomaven.util;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
-
-import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import org.apache.maven.plugin.logging.Log;
+import org.semanticweb.HermiT.ReasonerFactory;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.OWLXMLDocumentFormat;
 import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
@@ -23,16 +20,17 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import org.semanticweb.owlapi.model.UnloadableImportException;
-import org.semanticweb.owlapi.reasoner.BufferingMode;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.structural.StructuralReasonerFactory;
 import org.semanticweb.owlapi.util.InferredOntologyGenerator;
 import org.semanticweb.owlapi.util.OWLOntologyImportsClosureSetProvider;
 import org.semanticweb.owlapi.util.OWLOntologyMerger;
 
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 public class Util {
 
@@ -238,8 +236,8 @@ public class Util {
 		log.info("");
 		log.info("Inferring axioms...");
 		int originalAxiomsCount = ontology.getAxiomCount();
-		new InferredOntologyGenerator(new PelletReasoner(ontology,
-		                                                 BufferingMode.BUFFERING)).fillOntology(manager.getOWLDataFactory(), ontology);
+
+		new InferredOntologyGenerator( new ReasonerFactory().createReasoner( ontology ) ).fillOntology(manager.getOWLDataFactory(), ontology);
 		log.info((ontology.getAxiomCount() - originalAxiomsCount) + " axioms successfully inferred.");
 		log.info("");
 	}

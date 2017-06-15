@@ -1,9 +1,7 @@
 package de.csw.ontomaven;
 
-import java.io.File;
-import java.util.Locale;
-import java.util.Set;
-
+import com.google.common.collect.Multimap;
+import de.csw.ontomaven.util.Util;
 import org.apache.maven.doxia.sink.Sink;
 import org.apache.maven.doxia.siterenderer.Renderer;
 import org.apache.maven.plugin.logging.Log;
@@ -17,7 +15,6 @@ import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLDataPropertyExpression;
-import org.semanticweb.owlapi.model.OWLDataRange;
 import org.semanticweb.owlapi.model.OWLDocumentFormat;
 import org.semanticweb.owlapi.model.OWLImportsDeclaration;
 import org.semanticweb.owlapi.model.OWLIndividual;
@@ -35,9 +32,10 @@ import org.semanticweb.owlapi.profiles.OWL2QLProfile;
 import org.semanticweb.owlapi.profiles.OWL2RLProfile;
 import org.semanticweb.owlapi.search.EntitySearcher;
 
-import com.google.common.collect.Multimap;
-
-import de.csw.ontomaven.util.Util;
+import java.io.File;
+import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Generates a report for the ontology. This report will contain
@@ -49,6 +47,7 @@ import de.csw.ontomaven.util.Util;
  * @configurator include-project-dependencies
  * @requiresDependencyResolution compile+runtime
  */
+@SuppressWarnings( "ConstantConditions" )
 public class CreateOntologyReport extends AbstractMavenReport {
 
 	/**
@@ -156,13 +155,12 @@ public class CreateOntologyReport extends AbstractMavenReport {
 
 
 		// 1.2: Creatin some often needed variables
-		Set<OWLClass> classes = ontology.getClassesInSignature();
-		Set<OWLDataProperty> dataProps = ontology.getDataPropertiesInSignature();
-		Set<OWLObjectProperty> objectProps = ontology.getObjectPropertiesInSignature();
-		Set<OWLImportsDeclaration> importDecls = ontology.getImportsDeclarations();
-		Set<OWLAnnotationProperty> annotationProps = ontology
-				.getAnnotationPropertiesInSignature();
-		Set<OWLNamedIndividual> individuals = ontology.getIndividualsInSignature();
+		Set<OWLClass> classes = ontology.classesInSignature().collect( Collectors.toSet() );
+		Set<OWLDataProperty> dataProps = ontology.dataPropertiesInSignature().collect( Collectors.toSet() );
+		Set<OWLObjectProperty> objectProps = ontology.objectPropertiesInSignature().collect( Collectors.toSet() );
+		Set<OWLImportsDeclaration> importDecls = ontology.importsDeclarations().collect( Collectors.toSet() );
+		Set<OWLAnnotationProperty> annotationProps = ontology.annotationPropertiesInSignature().collect( Collectors.toSet() );
+		Set<OWLNamedIndividual> individuals = ontology.individualsInSignature().collect( Collectors.toSet() );
 
 
 		// 2: Preparing document
@@ -194,13 +192,13 @@ public class CreateOntologyReport extends AbstractMavenReport {
 		sink.text("Description:");
 		sink.bold_();
 		sink.list();
-		for (OWLAnnotation annotation : ontology.getAnnotations()) {
+		ontology.annotations().forEach( (annotation) -> {
 			if (annotation.getProperty().isComment()) {
 				sink.listItem();
 				sink.text(annotation.getValue().toString());
 				sink.listItem_();
 			}
-		}
+		});
 		sink.list_();
 		sink.paragraph_();
 
@@ -238,7 +236,7 @@ public class CreateOntologyReport extends AbstractMavenReport {
 		sink.bold_();
 		sink.tableHeaderCell_();
 		sink.tableRow_();
-		if (ontology.getImports().size() > 0) {
+		if (ontology.imports().count() > 0) {
 			for (OWLImportsDeclaration importDecl : importDecls) {
 				sink.tableRow();
 				sink.tableCell();
@@ -381,6 +379,7 @@ public class CreateOntologyReport extends AbstractMavenReport {
 		for (OWLClass owlClass : classes) {
 
 			// 13.1: Addding class name
+			IRI classIRI = owlClass.getIRI();
 			String className = owlClass.getIRI().getRemainder().get();
 			sink.table();
 			sink.tableRow();
@@ -398,15 +397,15 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.listItem();
 			sink.text("Super classes:");
 			sink.list();
-			for (OWLClassExpression exp : EntitySearcher.getSuperClasses(owlClass, ontology)) {
-				for (OWLClass sub : exp.getClassesInSignature()) {
+			EntitySearcher.getSuperClasses(owlClass, ontology).forEach( ( OWLClassExpression exp ) -> {
+				exp.classesInSignature().forEach( (sub) -> {
 					sink.listItem();
 					sink.link("#" + sub.getIRI().getRemainder().get());
 					sink.text(sub.getIRI().getRemainder().get());
 					sink.link_();
 					sink.listItem_();
-				}
-			}
+				});
+			});
 			sink.list_();
 			sink.listItem_();
 
@@ -415,7 +414,7 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.text("Individuals:");
 			sink.list();
 			for (OWLNamedIndividual individual: individuals) {
-				for(OWLClassExpression expr: EntitySearcher.getTypes(individual, ontology)) {
+				EntitySearcher.getTypes(individual, ontology).forEach( (expr) -> {
 					OWLClass classOfIndividual = expr.asOWLClass();
 					String individualName = individual.getIRI().getRemainder().get();
 					if (classOfIndividual.equals(owlClass)
@@ -426,7 +425,7 @@ public class CreateOntologyReport extends AbstractMavenReport {
 						sink.link_();
 						sink.listItem_();
 					}
-				}
+				});
 			}
 			sink.list_();
 			sink.listItem_();
@@ -435,15 +434,15 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.listItem();
 			sink.text("Subclasses:");
 			sink.list();
-			for (OWLClassExpression exp : EntitySearcher.getSubClasses(owlClass, ontology)) {
-				for (OWLClass sub : exp.getClassesInSignature()) {
+			EntitySearcher.getSubClasses(owlClass, ontology).forEach( (exp)-> {
+				exp.classesInSignature().forEach( (sub) -> {
 					sink.listItem();
 					sink.link("#" + sub.getIRI().getRemainder().get());
 					sink.text(sub.getIRI().getRemainder().get());
 					sink.link_();
 					sink.listItem_();
-				}
-			}
+				});
+			});
 			sink.list_();
 			sink.listItem_();
 
@@ -453,15 +452,15 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.list();
 			for (OWLDataProperty property : dataProps) {
 				String propertyName = property.getIRI().getRemainder().get();
-				for (OWLClassExpression domain : EntitySearcher.getDomains(property, ontology)) {
-					if (className.equals(domain)) {
+				EntitySearcher.getDomains(property, ontology).forEach( (domain) -> {
+					if (domain.isClassExpressionLiteral() && classIRI.equals(domain.asOWLClass().getIRI())) {
 						sink.listItem();
 						sink.link("#" + propertyName);
 						sink.text(propertyName);
 						sink.link_();
 						sink.listItem_();
 					}
-				}
+				});
 			}
 			sink.list_();
 			sink.listItem_();
@@ -472,15 +471,15 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.list();
 			for (OWLObjectProperty property : objectProps) {
 				String propertyName = property.getIRI().getRemainder().get();
-				for (OWLClassExpression domain : EntitySearcher.getDomains(property, ontology)) {
-					if (className.equals(domain)) {
+				EntitySearcher.getDomains(property, ontology).forEach( (domain) -> {
+					if (domain.isClassExpressionLiteral() && classIRI.equals(domain.asOWLClass().getIRI())) {
 						sink.listItem();
 						sink.link("#" + propertyName);
 						sink.text(propertyName);
 						sink.link_();
 						sink.listItem_();
 					}
-				}
+				});
 			}
 			sink.list_();
 			sink.listItem_();
@@ -489,13 +488,13 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.listItem();
 			sink.text("Comments:");
 			sink.list();
-			for (OWLAnnotation annotation : EntitySearcher.getAnnotations(owlClass, ontology)) {
+			EntitySearcher.getAnnotations(owlClass, ontology).forEach( (annotation) -> {
 				if (annotation.getProperty().isComment()){
 					sink.listItem();
 					sink.text(annotation.getValue().toString());
 					sink.listItem_();
 				}
-			}
+			});
 			sink.list_();
 			sink.listItem_();
 
@@ -533,13 +532,13 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.listItem();
 			sink.text("Domain");
 			sink.list();
-			for (OWLClassExpression domain : EntitySearcher.getDomains(property, ontology)) {
+			EntitySearcher.getDomains(property, ontology).forEach( (domain) -> {
 				sink.listItem();
 				sink.link("#" + domain.asOWLClass().getIRI().getRemainder().get());
 				sink.text(domain.asOWLClass().getIRI().getRemainder().get());
 				sink.link_();
 				sink.listItem_();
-			}
+			});
 			sink.list_();
 			sink.listItem_();
 
@@ -547,13 +546,13 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.listItem();
 			sink.text("Range");
 			sink.list();
-			for (OWLClassExpression range : EntitySearcher.getRanges(property, ontology)) {
+			EntitySearcher.getRanges(property, ontology).forEach( (range) -> {
 				sink.listItem();
 				sink.link("#" + range.asOWLClass().getIRI().getRemainder().get());
 				sink.text(range.asOWLClass().getIRI().getRemainder().get());
 				sink.link_();
 				sink.listItem_();
-			}
+			});
 			sink.list_();
 			sink.listItem_();
 
@@ -561,13 +560,13 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.listItem();
 			sink.text("Comments");
 			sink.list();
-			for (OWLAnnotation annotation: EntitySearcher.getAnnotations(property, ontology)){
+			EntitySearcher.getAnnotations(property, ontology).forEach( (annotation) -> {
 				if (annotation.getProperty().isComment()){
 					sink.listItem();
 					sink.text(annotation.getValue().toString());
 					sink.listItem_();
 				}
-			}
+			});
 			sink.list_();
 			sink.listItem_();
 
@@ -605,13 +604,13 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.listItem();
 			sink.text("Domain");
 			sink.list();
-			for (OWLClassExpression domain : EntitySearcher.getDomains(property, ontology)) {
+			EntitySearcher.getDomains(property, ontology).forEach( (domain) -> {
 				sink.listItem();
 				sink.link("#" + domain.asOWLClass().getIRI().getRemainder().get());
 				sink.text(domain.asOWLClass().getIRI().getRemainder().get());
 				sink.link_();
 				sink.listItem_();
-			}
+			});
 			sink.list_();
 			sink.listItem_();
 
@@ -619,13 +618,13 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.listItem();
 			sink.text("DataRange");
 			sink.list();
-			for (OWLDataRange range : EntitySearcher.getRanges(property, ontology)) {
+			EntitySearcher.getRanges(property, ontology).forEach( (range) -> {
 				sink.listItem();
 				sink.link("#" + range.toString());
 				sink.text(range.toString());
 				sink.link_();
 				sink.listItem_();
-			}
+			});
 			sink.list_();
 			sink.listItem_();
 
@@ -633,13 +632,13 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.listItem();
 			sink.text("Comments");
 			sink.list();
-			for (OWLAnnotation annotation: EntitySearcher.getAnnotations(property, ontology)){
+			EntitySearcher.getAnnotations(property, ontology).forEach( (annotation) -> {
 				if (annotation.getProperty().isComment()){
 					sink.listItem();
 					sink.text(annotation.getValue().toString());
 					sink.listItem_();
 				}
-			}
+			});
 			sink.list_();
 			sink.listItem_();
 
@@ -677,7 +676,7 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.listItem();
 			sink.text("Type(s): ");
 			sink.list();
-			for (OWLClassExpression type : EntitySearcher.getTypes(individual, ontology)) {
+			EntitySearcher.getTypes(individual, ontology).forEach( (type) -> {
 				if (!type.asOWLClass().isOWLThing()) {
 					sink.listItem();
 					sink.link("#" + type.asOWLClass().getIRI().getRemainder().get());
@@ -685,7 +684,7 @@ public class CreateOntologyReport extends AbstractMavenReport {
 					sink.link_();
 					sink.listItem_();
 				}
-			}
+			});
 			sink.list_();
 			sink.listItem_();
 
@@ -743,13 +742,13 @@ public class CreateOntologyReport extends AbstractMavenReport {
 			sink.listItem();
 			sink.text("Comments");
 			sink.list();
-			for (OWLAnnotation annotation: EntitySearcher.getAnnotations(individual, ontology)){
+			EntitySearcher.getAnnotations(individual, ontology).forEach( (annotation) -> {
 				if (annotation.getProperty().isComment()){
 					sink.listItem();
 					sink.text(annotation.getValue().toString());
 					sink.listItem_();
 				}
-			}
+			});
 			sink.list_();
 			sink.listItem_();
 
