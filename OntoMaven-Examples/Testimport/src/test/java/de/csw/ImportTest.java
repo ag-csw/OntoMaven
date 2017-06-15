@@ -10,26 +10,27 @@ import static org.junit.Assert.fail;
 
 public class ImportTest {
 
-	private static void assertFileExists(String fileName) {
-		URL url = ImportTest.class.getResource(fileName);
+	private static void assertFileExists(String relPath) {
+		URL url = Thread.currentThread().getContextClassLoader().getResource(".");
 		if (url==null) {
-			fail("Unable to find file " + fileName + "in target folder");
+			fail("FATAL: Unable to locate current directory");
 		}
 		try {
-			File f = new File(url.toURI());
+			File f = new File(url.getPath() + relPath);
 			if (!f.exists()) {
-				fail("Unable to find file " + fileName + "in target folder");
+				fail("Unable to find file " + f.getPath() + "in target folder");
 			}
-		} catch (URISyntaxException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-			fail("Unable to find file " + fileName + "in target folder");
+			fail("Unable to find file " + relPath + "in target folder");
 		}
 	}
 
 	@Test
 	public void testCatalog() {
-		assertFileExists( "/owl/pizza.owl" );
-		assertFileExists( "/owl/catalog.xml" );
-		assertFileExists( "/owl/imports/protege.owl" );
+		System.out.println("Trying to find the files");
+		assertFileExists( "../owl_tgt/pizza.owl" );
+		assertFileExists( "../owl_tgt/catalog.xml" );
+		assertFileExists( "../owl_tgt/imports/protege.owl" );
 	}
 }

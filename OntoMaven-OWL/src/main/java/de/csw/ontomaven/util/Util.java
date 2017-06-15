@@ -17,6 +17,7 @@ import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLDocumentFormat;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyLoaderConfiguration;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import org.semanticweb.owlapi.model.UnloadableImportException;
@@ -29,6 +30,9 @@ import org.semanticweb.owlapi.util.OWLOntologyMerger;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -358,5 +362,36 @@ public class Util {
 			}
 		}
 		return left + right;
+	}
+
+
+	public static void fetchOntologyDocumentFromURL( String owlFileURL, String targetFileName ) throws IOException, OWLOntologyCreationException, OWLOntologyStorageException {
+		URL sourceUrl = null;
+		try {
+			sourceUrl = new URL( owlFileURL );
+		} catch ( MalformedURLException e ) {
+			// not a valid URL, possibly a relative path
+			File f = Util.resolveFile( new File( owlFileURL ) );
+			if ( f.exists() ) {
+				try {
+					sourceUrl = f.toURI().toURL();
+				} catch ( MalformedURLException e1 ) {
+					e1.addSuppressed( e );
+					e1.printStackTrace();
+				}
+			}
+		}
+		if ( sourceUrl != null ) {
+			OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
+			OWLOntologyLoaderConfiguration cfg = new OWLOntologyLoaderConfiguration();
+			cfg.setMissingImportHandlingStrategy( MissingImportHandlingStrategy.SILENT );
+			OWLOntology onto = mgr.loadOntologyFromOntologyDocument( sourceUrl.openStream() );
+
+			File t = new File( targetFileName );
+			if ( ! t.getParentFile().exists() ) {
+				t.getParentFile().mkdirs();
+			}
+			mgr.saveOntology( onto, new FileOutputStream( t ) );
+		}
 	}
 }

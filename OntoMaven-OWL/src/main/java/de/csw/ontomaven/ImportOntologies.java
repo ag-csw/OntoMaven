@@ -22,6 +22,8 @@ import org.semanticweb.owlapi.model.OWLImportsDeclaration;
 import org.semanticweb.owlapi.model.OWLOntology;
 
 import de.csw.ontomaven.util.Util;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
 /**
  * Loads and saves all (also transitiv) imports. The loaded ontologies
@@ -47,7 +49,7 @@ public class ImportOntologies extends AbstractMojo {
 	private String owlDirectory;
 	
 	/**
-	 * Name of the ontology file, which should be in the working directory.
+	 * Name of the ontology file, relative to the working owlDirectory.
 	 * It should be a name like "myOntology.owl".
 	 *
 	 * @parameter 	property="owlFileName"
@@ -56,6 +58,16 @@ public class ImportOntologies extends AbstractMojo {
 	 */
 	private String owlFileName;
 	
+	/**
+	 * URL/relative path where a copy of the ontology file can be retrieved
+	 * If not present, the file will assume to be already available in the owlDirectory
+	 *
+	 * @parameter 	property="owlFileURL"
+	 *
+	 * @optional
+	 */
+	private String owlFileURL;
+
 	/**
 	 * Path of directory, where to save imported ontologies and
 	 * the catalog file. This directory will be created in the
@@ -90,11 +102,24 @@ public class ImportOntologies extends AbstractMojo {
 		
 		// Loading main ontology
 		File owlFile = Util.resolveFile(new File(owlDirectory + File.separator + owlFileName));
-		OWLOntology ontology = Util.loadOntologyByIgnoringMissingImports(
-				null, log, new FileDocumentSource(owlFile));
-		if (ontology == null) return; // ontology not loaded
-		
-		
+		if (! owlFile.exists()) {
+			try {
+				Util.fetchOntologyDocumentFromURL(owlFileURL,owlFile.getAbsolutePath());
+			} catch ( IOException e ) {
+				e.printStackTrace();
+			} catch ( OWLOntologyCreationException e ) {
+				e.printStackTrace();
+			} catch ( OWLOntologyStorageException e ) {
+				e.printStackTrace();
+			}
+		}
+		OWLOntology ontology;
+		if ( owlFile.exists() ) {
+			ontology = Util.loadOntologyByIgnoringMissingImports( null, log, new FileDocumentSource( owlFile ) );
+		} else {
+			return;
+		}
+
 		// Creating catalog
 		File catalogFile = Util.relativeToFile(new File(owlDirectory + File.separator + catalogFileName),
 											   owlFile);

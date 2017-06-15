@@ -42,22 +42,24 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Test Import</name>
-    <url>http://maven.apache.org</url>
+    <name>Test OWL Import</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <targetDir>${project.build.directory}/owl_tgt</targetDir>
     </properties>
 
     <build>
+
         <plugins>
             <plugin>
                 <groupId>de.csw</groupId>
                 <artifactId>ontomaven</artifactId>
                 <version>1.0-SNAPSHOT</version>
                 <configuration>
-                    <owlDirectory>owl</owlDirectory>
+                    <owlDirectory>${targetDir}</owlDirectory>
                     <owlFileName>pizza.owl</owlFileName>
+                    <owlFileURL>owl/pizza.owl</owlFileURL>
                 </configuration>
                 <executions>
                     <execution>
