@@ -1,6 +1,7 @@
 package de.csw.ontomaven;
 
 import java.io.File;
+import java.util.Optional;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -104,10 +105,14 @@ public class CreateOntologyGraph extends AbstractMojo {
 		// Loading ontology
 		OWLOntologyManager manager = Util.createManager();
 		File owlFile = Util.resolveFile(new File(owlDirectory + File.separator + owlFileName));
-		OWLOntology ontology = Util.loadOntologyFile(manager, log, owlFile);
-		if (ontology == null) return; // Ontology not loaded
-		
-		
+		Optional<OWLOntology> oontology = Util.loadOntologyFile( manager, log, owlFile );
+		if (!oontology.isPresent()) {
+			log.warn("Could not load ontology " + owlFile.getAbsolutePath() );
+			return;
+		}
+		OWLOntology ontology = oontology.get();
+
+
 		// Applying aspects
 		if(ifApplyAspects)
 			Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log);

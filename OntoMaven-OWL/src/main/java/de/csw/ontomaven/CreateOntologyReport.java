@@ -34,6 +34,7 @@ import org.semanticweb.owlapi.search.EntitySearcher;
 
 import java.io.File;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -145,8 +146,12 @@ public class CreateOntologyReport extends AbstractMavenReport {
 		// 1: Loading ontology
 		File owlFile = Util.resolveFile(new File(owlDirectory + File.separator + owlFileName));
 		OWLOntologyManager manager = Util.createManager();
-		OWLOntology ontology = Util.loadOntologyFile(manager, log, owlFile);
-		if (ontology == null) return; // Ontology not loaded
+		Optional<OWLOntology> oontology = Util.loadOntologyFile( manager, log, owlFile );
+		if (!oontology.isPresent()) {
+			log.warn("Could not load ontology " + owlFile.getAbsolutePath() );
+			return;
+		}
+		OWLOntology ontology = oontology.get();
 
 
 		// 1.1: Applying aspects, if wanted

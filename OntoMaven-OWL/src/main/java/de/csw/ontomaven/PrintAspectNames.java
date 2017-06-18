@@ -2,6 +2,7 @@ package de.csw.ontomaven;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -58,10 +59,14 @@ public class PrintAspectNames extends AbstractMojo {
 		// Step 1: Loading ontology
 		OWLOntologyManager manager = Util.createManager();
 		File owlFile = new File(owlDirectory + File.separator + owlFileName);
-		OWLOntology ontology = Util.loadOntologyFile(manager, log, owlFile);
-		if (ontology == null) return; // Ontology not loaded
+		Optional<OWLOntology> oontology = Util.loadOntologyFile( manager, log, owlFile );
+		if (!oontology.isPresent()) {
+			log.warn("Could not load ontology " + owlFile.getAbsolutePath() );
+			return;
+		}
+		OWLOntology ontology = oontology.get();
 
-		
+
 		// Step 3: Getting all aspect names
 		log.info("Collecting aspect names...");
 		List<String> foundAspectNames = new AspectManager(manager, aspectsIRI,

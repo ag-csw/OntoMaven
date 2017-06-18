@@ -1,6 +1,7 @@
 package de.csw.ontomaven;
 
 import java.io.File;
+import java.util.Optional;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -82,10 +83,12 @@ public class ApplyAspects extends AbstractMojo {
 		// Loading ontology
 		File owlFile = new File(owlDirectory + File.separator + owlFileName);
 		OWLOntologyManager manager = Util.createManager();
-		OWLOntology ontology = Util.loadOntologyFile(manager, log, owlFile);
-		if (ontology == null) return; // Ontology not loaded
-		
-		
+		Optional<OWLOntology> oontology = Util.loadOntologyFile( manager, log, owlFile );
+		if (!oontology.isPresent()) return; // Ontology not loaded
+
+		OWLOntology ontology = oontology.get();
+
+
 		// Applying aspects
 		Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log);
 

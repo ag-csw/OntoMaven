@@ -14,6 +14,7 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -82,13 +83,12 @@ public class TestOntology extends AbstractMojo {
 		// Loading ontology
 		File owlFile = new File(owlDirectory + File.separator + owlFileName);
 		OWLOntologyManager manager = Util.createManager();
-		OWLOntology ontology = Util.loadOntologyFile(manager, log, owlFile);
-		if (ontology == null) {
+		Optional<OWLOntology> oontology = Util.loadOntologyFile( manager, log, owlFile );
+		if (!oontology.isPresent()) {
 			log.warn("Could not load ontology " + owlFile.getAbsolutePath() );
 			return;
 		}
-		
-		
+		OWLOntology ontology = oontology.get();
 		// Printing that the syntax was OK. If it would be not OK, the execution
 		// would not come until here
 		log.info("Ontology loaded,  syntax OK.");
