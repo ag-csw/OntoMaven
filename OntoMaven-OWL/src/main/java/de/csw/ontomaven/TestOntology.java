@@ -3,17 +3,29 @@ package de.csw.ontomaven;
 import com.clarkparsia.owlapi.explanation.BlackBoxExplanation;
 import com.clarkparsia.owlapi.explanation.HSTExplanationGenerator;
 import de.csw.ontomaven.util.Util;
+import edu.emory.mathcs.backport.java.util.Collections;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.semanticweb.HermiT.Configuration;
+import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.HermiT.ReasonerFactory;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyChangeProgressListener;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.model.parameters.Imports;
+import org.semanticweb.owlapi.reasoner.ConsoleProgressMonitor;
+import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.reasoner.OWLReasonerConfiguration;
+import org.semanticweb.owlapi.reasoner.ReasonerProgressMonitor;
+import org.semanticweb.owlapi.util.InferredOntologyGenerator;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -75,14 +87,90 @@ public class TestOntology extends AbstractMojo {
 	private String[] userAspects;
 
 	/**
-	 * Name of the catalog file, where the imports are registered.
+	 * URL of the catalog where mappings are registered.
 	 *
-	 * @parameter 	property="catalogFileName"
+	 * @parameter 	property="catalogURL"
 	 * 				default-value="catalog-v001.xml"
 	 * @required
 	 */
-	private String catalogFileName;
+	private String catalogURL;
 
+
+	/**
+	 * Inference tasks to perform
+	 *
+	 * @parameter   property="inferences"
+	 *
+	 * @required
+	 */
+	private List<InferenceType> inferences = new ArrayList( defaultIinferences );
+
+
+	private static final List<InferenceType> defaultIinferences = Arrays.asList( InferenceType.CLASS_HIERARCHY,
+	                                                                             InferenceType.CLASS_ASSERTIONS,
+	                                                                             InferenceType.OBJECT_PROPERTY_ASSERTIONS,
+	                                                                             InferenceType.OBJECT_PROPERTY_HIERARCHY,
+	                                                                             InferenceType.DATA_PROPERTY_ASSERTIONS,
+	                                                                             InferenceType.DATA_PROPERTY_HIERARCHY,
+	                                                                             InferenceType.DISJOINT_CLASSES
+	                                                                           );
+
+
+	public String getOwlDirectory() {
+		return owlDirectory;
+	}
+
+	public void setOwlDirectory( String owlDirectory ) {
+		this.owlDirectory = owlDirectory;
+	}
+
+	public String getOwlFileName() {
+		return owlFileName;
+	}
+
+	public void setOwlFileName( String owlFileName ) {
+		this.owlFileName = owlFileName;
+	}
+
+	public String getAspectsIRI() {
+		return aspectsIRI;
+	}
+
+	public void setAspectsIRI( String aspectsIRI ) {
+		this.aspectsIRI = aspectsIRI;
+	}
+
+	public boolean isIfApplyAspects() {
+		return ifApplyAspects;
+	}
+
+	public void setIfApplyAspects( boolean ifApplyAspects ) {
+		this.ifApplyAspects = ifApplyAspects;
+	}
+
+	public String[] getUserAspects() {
+		return userAspects;
+	}
+
+	public void setUserAspects( String[] userAspects ) {
+		this.userAspects = userAspects;
+	}
+
+	public String getCatalogURL() {
+		return catalogURL;
+	}
+
+	public void setCatalogURL( String catalogURL ) {
+		this.catalogURL = catalogURL;
+	}
+
+	public List<InferenceType> getInferences() {
+		return inferences;
+	}
+
+	public void setInferences( List<InferenceType> inferences ) {
+		this.inferences = inferences;
+	}
 
 	/** Tests an ontology regarding syntax and consistency */
 	public void execute() throws MojoExecutionException {
@@ -92,7 +180,7 @@ public class TestOntology extends AbstractMojo {
 
 		// Loading ontology
 		File owlFile = new File(owlDirectory + File.separator + owlFileName);
-		OWLOntologyManager manager = Util.createManager(Util.createCatalog( Optional.ofNullable( catalogFileName ) ) );
+		OWLOntologyManager manager = Util.createManager(Util.createCatalog( Optional.ofNullable( catalogURL ) ) );
 		Optional<OWLOntology> oontology = Util.loadOntologyFile( manager, log, owlFile );
 		if (!oontology.isPresent()) {
 			log.warn("Could not load ontology " + owlFile.getAbsolutePath() );
@@ -113,26 +201,48 @@ public class TestOntology extends AbstractMojo {
 		ReasonerFactory factory = new ReasonerFactory();
 
 		Configuration configuration=new Configuration();
-		configuration.throwInconsistentOntologyException=false;
+		configuration.throwInconsistentOntologyException = false;
+		configuration.reasonerProgressMonitor = new LogProgressMonitor( log );
 
 		OWLReasoner reasoner = factory.createReasoner( ontology, configuration );
-		BlackBoxExplanation exp=new BlackBoxExplanation( ontology, factory, reasoner );
-		HSTExplanationGenerator multExplanator=new HSTExplanationGenerator( exp );
-		// Now we can get explanations for the unsatisfiability.
+		reasoner.precomputeInferences( inferences.isEmpty() ?
+				                               defaultIinferences.toArray( new InferenceType[ defaultIinferences.size()] ) :
+				                               inferences.toArray( new InferenceType[ inferences.size()] ) );
 
-		Set<OWLAxiom> inconsistentAxioms = multExplanator.getExplanation( ontology.getOWLOntologyManager().getOWLDataFactory().getOWLThing() );
-	
 		// Printing result of consistency check
 		log.info("Testing consistency...");
 		log.info("");
-		if(inconsistentAxioms.size() == 0){
+
+		if ( reasoner.isConsistent() ) {
 			log.info("Consistency OK, ontology is consistent");
-		}else{
+		} else {
 			log.info("Ontology inconsistent because of these axioms:");
-			for (OWLAxiom inconsistentAxiom: inconsistentAxioms){
-				log.info(" - " + inconsistentAxiom.toString());
-			}
-		}		
+
+			BlackBoxExplanation exp = new BlackBoxExplanation( ontology, new ReasonerFactory() {
+				@Override
+				protected Configuration getProtegeConfiguration( OWLReasonerConfiguration owlAPIConfiguration ) {
+					Configuration cfg = super.getProtegeConfiguration( owlAPIConfiguration );
+					cfg.throwInconsistentOntologyException = false;
+					return cfg;
+				}
+			}, reasoner );
+			HSTExplanationGenerator multExplanator = new HSTExplanationGenerator( exp );
+
+			ontology.classesInSignature( Imports.INCLUDED ).forEach(
+					(clax) -> {
+						Set<Set<OWLAxiom>> inconsistentAxioms = multExplanator.getExplanations( clax );
+
+						for ( Set<OWLAxiom> set : inconsistentAxioms ) {
+							log.info( "Explanation of inconsistency " + clax );
+							for ( OWLAxiom inconsistentAxiom : set) {
+								log.info( " - " + inconsistentAxiom.toString() );
+							}
+						}
+					}
+			                                                       );
+		}
+
+		reasoner.dispose();
 		
 		Util.printTail(log);
 	}
