@@ -74,6 +74,16 @@ public class TestOntology extends AbstractMojo {
 	 */
 	private String[] userAspects;
 
+	/**
+	 * Name of the catalog file, where the imports are registered.
+	 *
+	 * @parameter 	property="catalogFileName"
+	 * 				default-value="catalog-v001.xml"
+	 * @required
+	 */
+	private String catalogFileName;
+
+
 	/** Tests an ontology regarding syntax and consistency */
 	public void execute() throws MojoExecutionException {
 
@@ -82,7 +92,7 @@ public class TestOntology extends AbstractMojo {
 
 		// Loading ontology
 		File owlFile = new File(owlDirectory + File.separator + owlFileName);
-		OWLOntologyManager manager = Util.createManager();
+		OWLOntologyManager manager = Util.createManager(Util.createCatalog( Optional.ofNullable( catalogFileName ) ) );
 		Optional<OWLOntology> oontology = Util.loadOntologyFile( manager, log, owlFile );
 		if (!oontology.isPresent()) {
 			log.warn("Could not load ontology " + owlFile.getAbsolutePath() );
