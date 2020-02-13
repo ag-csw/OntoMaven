@@ -1,20 +1,33 @@
 package de.csw.ontomaven;
 
-import java.io.File;
-import java.util.Set;
-
+import com.clarkparsia.owlapi.explanation.BlackBoxExplanation;
+import com.clarkparsia.owlapi.explanation.HSTExplanationGenerator;
+import de.csw.ontomaven.util.Util;
+import edu.emory.mathcs.backport.java.util.Collections;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.semanticweb.HermiT.Configuration;
+import org.semanticweb.HermiT.Reasoner;
+import org.semanticweb.HermiT.ReasonerFactory;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyChangeProgressListener;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.reasoner.BufferingMode;
+import org.semanticweb.owlapi.model.parameters.Imports;
+import org.semanticweb.owlapi.reasoner.ConsoleProgressMonitor;
+import org.semanticweb.owlapi.reasoner.InferenceType;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.reasoner.OWLReasonerConfiguration;
+import org.semanticweb.owlapi.reasoner.ReasonerProgressMonitor;
+import org.semanticweb.owlapi.util.InferredOntologyGenerator;
 
-import com.clarkparsia.owlapi.explanation.PelletExplanation;
-import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
-
-import de.csw.ontomaven.util.Util;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Tests an ontology regarding the syntax and consistency. The
@@ -31,7 +44,7 @@ public class TestOntology extends AbstractMojo {
 	 * a relative path in the maven project directory.
 	 * 
 	 * @parameter 	property="owlDirectory"
-	 * 				default-value="owl"
+	 * 				default-value=""
 	 * @required
 	 */
 	private String owlDirectory;
@@ -73,6 +86,92 @@ public class TestOntology extends AbstractMojo {
 	 */
 	private String[] userAspects;
 
+	/**
+	 * URL of the catalog where mappings are registered.
+	 *
+	 * @parameter 	property="catalogURL"
+	 * 				default-value="catalog-v001.xml"
+	 * @required
+	 */
+	private String catalogURL;
+
+
+	/**
+	 * Inference tasks to perform
+	 *
+	 * @parameter   property="inferences"
+	 *
+	 * @required
+	 */
+	private List<InferenceType> inferences = new ArrayList( defaultIinferences );
+
+
+	private static final List<InferenceType> defaultIinferences = Arrays.asList( InferenceType.CLASS_HIERARCHY,
+	                                                                             InferenceType.CLASS_ASSERTIONS,
+	                                                                             InferenceType.OBJECT_PROPERTY_ASSERTIONS,
+	                                                                             InferenceType.OBJECT_PROPERTY_HIERARCHY,
+	                                                                             InferenceType.DATA_PROPERTY_ASSERTIONS,
+	                                                                             InferenceType.DATA_PROPERTY_HIERARCHY,
+	                                                                             InferenceType.DISJOINT_CLASSES
+	                                                                           );
+
+
+	public String getOwlDirectory() {
+		return owlDirectory;
+	}
+
+	public void setOwlDirectory( String owlDirectory ) {
+		this.owlDirectory = owlDirectory;
+	}
+
+	public String getOwlFileName() {
+		return owlFileName;
+	}
+
+	public void setOwlFileName( String owlFileName ) {
+		this.owlFileName = owlFileName;
+	}
+
+	public String getAspectsIRI() {
+		return aspectsIRI;
+	}
+
+	public void setAspectsIRI( String aspectsIRI ) {
+		this.aspectsIRI = aspectsIRI;
+	}
+
+	public boolean isIfApplyAspects() {
+		return ifApplyAspects;
+	}
+
+	public void setIfApplyAspects( boolean ifApplyAspects ) {
+		this.ifApplyAspects = ifApplyAspects;
+	}
+
+	public String[] getUserAspects() {
+		return userAspects;
+	}
+
+	public void setUserAspects( String[] userAspects ) {
+		this.userAspects = userAspects;
+	}
+
+	public String getCatalogURL() {
+		return catalogURL;
+	}
+
+	public void setCatalogURL( String catalogURL ) {
+		this.catalogURL = catalogURL;
+	}
+
+	public List<InferenceType> getInferences() {
+		return inferences;
+	}
+
+	public void setInferences( List<InferenceType> inferences ) {
+		this.inferences = inferences;
+	}
+
 	/** Tests an ontology regarding syntax and consistency */
 	public void execute() throws MojoExecutionException {
 
@@ -81,11 +180,13 @@ public class TestOntology extends AbstractMojo {
 
 		// Loading ontology
 		File owlFile = new File(owlDirectory + File.separator + owlFileName);
-		OWLOntologyManager manager = Util.createManager();
-		OWLOntology ontology = Util.loadOntologyFile(manager, log, owlFile);
-		if (ontology == null) return;
-		
-		
+		OWLOntologyManager manager = Util.createManager(Util.createCatalog( Optional.ofNullable( catalogURL ) ) );
+		Optional<OWLOntology> oontology = Util.loadOntologyFile( manager, log, owlFile );
+		if (!oontology.isPresent()) {
+			log.warn("Could not load ontology " + owlFile.getAbsolutePath() );
+			return;
+		}
+		OWLOntology ontology = oontology.get();
 		// Printing that the syntax was OK. If it would be not OK, the execution
 		// would not come until here
 		log.info("Ontology loaded,  syntax OK.");
@@ -97,23 +198,51 @@ public class TestOntology extends AbstractMojo {
 		
 		
 		// Getting inconsistent axioms
-		PelletExplanation.setup();
-		PelletReasoner reasoner = new PelletReasoner(ontology, BufferingMode.BUFFERING);
-		Set<OWLAxiom> inconsistentAxioms = new PelletExplanation(reasoner)
-				.getInconsistencyExplanation();
-		
-	
+		ReasonerFactory factory = new ReasonerFactory();
+
+		Configuration configuration=new Configuration();
+		configuration.throwInconsistentOntologyException = false;
+		configuration.reasonerProgressMonitor = new LogProgressMonitor( log );
+
+		OWLReasoner reasoner = factory.createReasoner( ontology, configuration );
+		reasoner.precomputeInferences( inferences.isEmpty() ?
+				                               defaultIinferences.toArray( new InferenceType[ defaultIinferences.size()] ) :
+				                               inferences.toArray( new InferenceType[ inferences.size()] ) );
+
 		// Printing result of consistency check
 		log.info("Testing consistency...");
 		log.info("");
-		if(inconsistentAxioms.size() == 0){
+
+		if ( reasoner.isConsistent() ) {
 			log.info("Consistency OK, ontology is consistent");
-		}else{
+		} else {
 			log.info("Ontology inconsistent because of these axioms:");
-			for (OWLAxiom inconsistentAxiom: inconsistentAxioms){
-				log.info( " - " + inconsistentAxiom.toString());
-			}
-		}		
+
+			BlackBoxExplanation exp = new BlackBoxExplanation( ontology, new ReasonerFactory() {
+				@Override
+				protected Configuration getProtegeConfiguration( OWLReasonerConfiguration owlAPIConfiguration ) {
+					Configuration cfg = super.getProtegeConfiguration( owlAPIConfiguration );
+					cfg.throwInconsistentOntologyException = false;
+					return cfg;
+				}
+			}, reasoner );
+			HSTExplanationGenerator multExplanator = new HSTExplanationGenerator( exp );
+
+			ontology.classesInSignature( Imports.INCLUDED ).forEach(
+					(clax) -> {
+						Set<Set<OWLAxiom>> inconsistentAxioms = multExplanator.getExplanations( clax );
+
+						for ( Set<OWLAxiom> set : inconsistentAxioms ) {
+							log.info( "Explanation of inconsistency " + clax );
+							for ( OWLAxiom inconsistentAxiom : set) {
+								log.info( " - " + inconsistentAxiom.toString() );
+							}
+						}
+					}
+			                                                       );
+		}
+
+		reasoner.dispose();
 		
 		Util.printTail(log);
 	}

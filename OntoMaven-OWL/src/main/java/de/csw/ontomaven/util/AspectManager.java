@@ -240,8 +240,7 @@ public class AspectManager {
 	 */
 	private void findAllAnnotationAssertions(){
 		for (OWLEntity entity: ontology.getSignature())
-			annotationAssertions.addAll(
-					ontology.getAnnotationAssertionAxioms(entity.getIRI()));
+			annotationAssertions.addAll(ontology.getAnnotationAssertionAxioms(entity.getIRI()));
 	}
 	
 	/**

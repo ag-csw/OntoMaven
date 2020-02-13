@@ -1,6 +1,7 @@
 package de.csw.ontomaven;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -97,9 +98,9 @@ public class InferAxioms extends AbstractMojo {
 		// Loading ontology
 		File owlFile = new File(owlDirectory + File.separator + owlFileName);
 		OWLOntologyManager manager = Util.createManager();
-		OWLOntology ontology = Util.loadOntologyFile(manager, log, owlFile);
-		if (ontology == null) return;
-		
+		Optional<OWLOntology> oontology = Util.loadOntologyFile( manager, log, owlFile );
+		if (!oontology.isPresent()) return;
+		OWLOntology ontology = oontology.get();
 		
 		// Applying aspects, if the user have sets the boolean true
 		if(ifApplyAspects)

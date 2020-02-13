@@ -2,8 +2,11 @@ package de.csw.ontomaven;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.DisplayMode;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -18,6 +21,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
@@ -41,7 +45,17 @@ import prefuse.data.io.DataIOException;
 import prefuse.data.io.GraphMLReader;
 
 public class OntoMavenOntologyViewer {
+
+	private static final String[] extensions = { "graphml", "owl", "ttl", "rdf"} ;
+
 	public static void main(String[] args) {
+
+		try {
+			// Set L&F - needed on high resolution screens
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 
 		// Creating and opening a fileChooser which accepts only .xml
 		// and .graphMl files, Get the file
@@ -49,6 +63,7 @@ public class OntoMavenOntologyViewer {
 		FileNameExtensionFilter filter = new FileNameExtensionFilter(
 				"GraphML File or OWL File", "graphml", "owl");
 		fileChooser.setFileFilter(filter);
+		fileChooser.setPreferredSize(getOptimalDimensions(0.5));
 		fileChooser.showOpenDialog(fileChooser);
 		fileChooser.setDialogTitle("Please choose an .owl or .graphml file.");
 		File fileToVisualize = fileChooser.getSelectedFile();
@@ -105,9 +120,8 @@ public class OntoMavenOntologyViewer {
 		// Creating window (JFrame) which will contain the graph
 		final JFrame window = new JFrame("Ontology Graph View");
 		window.add(graphPanel);
-		window.setSize(Toolkit.getDefaultToolkit().getScreenSize());
-		window.setExtendedState(JFrame.MAXIMIZED_BOTH);
-		
+		window.setPreferredSize(getOptimalDimensions(0.9));
+
 		
 		// Adding a save button to the window, with that a screenshot of
 		// the graph can be saved.
@@ -193,6 +207,11 @@ public class OntoMavenOntologyViewer {
 				.createOntologyModel(OntModelSpec.OWL_MEM);
 		jenaModel.read(bais, null, "RDF/XML");
 		return jenaModel;
-	}	
+	}
 
+	public static Dimension getOptimalDimensions(double scale) {
+		DisplayMode mode = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode();
+		Dimension dim = new Dimension((int)(mode.getWidth()*scale),(int)(mode.getHeight()*scale));
+		return dim;
+	}
 }

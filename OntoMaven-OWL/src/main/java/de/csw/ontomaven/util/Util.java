@@ -1,38 +1,50 @@
 package de.csw.ontomaven.util;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import org.apache.maven.plugin.logging.Log;
+import org.protege.xmlcatalog.CatalogUtilities;
+import org.protege.xmlcatalog.XMLCatalog;
+import org.protege.xmlcatalog.owlapi.XMLCatalogIRIMapper;
+import org.semanticweb.HermiT.ReasonerFactory;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.OWLXMLDocumentFormat;
 import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
 import org.semanticweb.owlapi.io.FileDocumentSource;
-import org.semanticweb.owlapi.io.IRIDocumentSource;
 import org.semanticweb.owlapi.io.OWLOntologyDocumentSource;
+import org.semanticweb.owlapi.io.StreamDocumentSource;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.MissingImportHandlingStrategy;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLDocumentFormat;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyIRIMapper;
+import org.semanticweb.owlapi.model.OWLOntologyLoaderConfiguration;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import org.semanticweb.owlapi.model.UnloadableImportException;
-import org.semanticweb.owlapi.reasoner.BufferingMode;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.structural.StructuralReasonerFactory;
 import org.semanticweb.owlapi.util.InferredOntologyGenerator;
 import org.semanticweb.owlapi.util.OWLOntologyImportsClosureSetProvider;
 import org.semanticweb.owlapi.util.OWLOntologyMerger;
 
-import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
 
 public class Util {
+
+	public static String[] knownExtensions = new String[] { "owl", "rdf", "rdfs", "ofn", "ttl" };
 
 	/**
 	 * Loads an ontology from a given owl file.
@@ -42,18 +54,52 @@ public class Util {
 	 * @param owlFile from which the ontology will be loaded
 	 * @return loaded ontology
 	 */
-	public static OWLOntology loadOntologyFile(
+	public static Optional<OWLOntology> loadOntologyFile(
 			OWLOntologyManager ontologyManager, Log log, File owlFile) {
 		
+		owlFile = resolveFile(owlFile);
 		if (owlFile == null || !owlFile.exists()){
 			log.error(owlFile.getAbsolutePath() + " not existing");
-			return null;
+			return Optional.empty();
 		}
-		
-		return loadOntology(ontologyManager, log, new FileDocumentSource(
-				owlFile));
+
+		return loadOntology(ontologyManager, log, new FileDocumentSource(owlFile));
 	}
-	
+
+	public static File resolveFile(File owlFile) {
+		 if (owlFile != null && !owlFile.exists()) {
+			URL url = Thread.currentThread().getContextClassLoader().getResource(owlFile.getPath());
+			if (url != null) {
+				try {
+					owlFile = new File(url.toURI());
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return owlFile;
+	}
+
+	public static Optional<URL> resolveURL(String string) {
+		URL url = null;
+		try {
+			url = new URL( string );
+		} catch ( MalformedURLException e ) {
+			url = Thread.currentThread().getContextClassLoader().getResource(string);
+			if (url == null) {
+				File f = new File( string );
+				if ( f.exists() ) {
+					try {
+						url = f.toURI().toURL();
+					} catch ( MalformedURLException e1 ) {
+						//
+					}
+				}
+			}
+		}
+		return Optional.ofNullable( url );
+	}
+
 	/**
 	 * This method first creates a configuration for loading ontology.
 	 * It is necessary because of missing imports. There could be some
@@ -66,26 +112,62 @@ public class Util {
 	 * 
 	 * @return loaded ontology
 	 */
-	public static OWLOntology loadOntologyByIgnoringMissingImports(
-			OWLOntologyManager manager, Log log,
-			OWLOntologyDocumentSource source) {
-		if (manager == null)
-			manager = createManager();
-		
-		manager.setOntologyLoaderConfiguration(manager.getOntologyLoaderConfiguration().setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT));
+	public static Optional<OWLOntology> loadOntologyByIgnoringMissingImports( OWLOntologyManager manager,
+	                                                                          Log log,
+	                                                                          OWLOntologyDocumentSource source) {
+		OWLOntologyLoaderConfiguration cfg = manager.getOntologyLoaderConfiguration().setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT);
+		manager.setOntologyLoaderConfiguration(cfg);
+
 		return loadOntology(manager, log, source);
 	}
+
+	/**
+	 * Loads an ontology, if not already in memory
+	 *
+	 * @param manager which will load the ontology
+	 * @param log for logging messages and errors
+	 * @param ontologyIRI the IRI of the ontology to be loaded
+	 * @param source from that the ontology will be loaded
+	 *
+	 * @return loaded ontology
+	 */
+	public static Optional<OWLOntology> loadOntologyByIgnoringMissingImports( OWLOntologyManager manager,
+	                                                                          Log log,
+	                                                                          Optional<IRI> ontologyIRI,
+	                                                                          OWLOntologyDocumentSource source) {
+		if ( ontologyIRI.isPresent() ) {
+			OWLOntology o = manager.getOntology( ontologyIRI.get() );
+			if ( o != null ) {
+				log.info( "Ontology already loaded : " + ontologyIRI.get().toString() );
+				return Optional.of( o );
+			}
+		}
+		return loadOntologyByIgnoringMissingImports( manager, log, source );
+	}
+
+	/**
+	 * Loads mappings from a Catalog file, and adds them to an Ontology Manager
+	 * @param manager The manager to be configured
+	 * @param catalog A catalog defining some ontology mappings
+	 */
+	private static void configureMappingsFromCatalog( OWLOntologyManager manager, Optional<XMLCatalog> catalog ) {
+		if ( catalog.isPresent() ) {
+			XMLCatalogIRIMapper mapper = new XMLCatalogIRIMapper( catalog.get() );
+			manager.setIRIMappers( Collections.<OWLOntologyIRIMapper>singleton( mapper ) );
+		}
+	}
+
 	/**
 	 * Loads an ontology from a given  {@link OWLOntologyDocumentSource}.
 	 * 
 	 * @param manager for loading the ontology
 	 * @param log for printing result and error messages
 	 * @param source from that the ontology will be loaded
-	 * @param config loading configuration
 	 * @return the loaded ontology
 	 */
-	public static OWLOntology loadOntology(OWLOntologyManager manager,
-			Log log, OWLOntologyDocumentSource source) {
+	public static Optional<OWLOntology> loadOntology(OWLOntologyManager manager,
+	                                                 Log log,
+	                                                 OWLOntologyDocumentSource source) {
 
 		if (manager == null)
 			manager = OWLManager.createOWLOntologyManager();
@@ -94,16 +176,16 @@ public class Util {
 		OWLOntology ontology = null;
 		try {
 			ontology = manager.loadOntologyFromOntologyDocument(source);
+
+			log.info("Ontology " + ontology.getOntologyID().getOntologyIRI().
+					toString() + " has been succesfull loaded.");
 		} catch (UnloadableImportException e) {
 			log.error("Import not succesfull taken place.", e);
 		} catch (OWLOntologyCreationException e) {
 			log.error("Ontology cannot be created.", e);
 		}
-		
-		log.info("Ontology " + ontology.getOntologyID().getOntologyIRI().
-				toString() + " has been succesfull loaded.");
-		
-		return ontology;
+
+		return Optional.ofNullable( ontology );
 	}
 	
 	/**
@@ -143,18 +225,24 @@ public class Util {
 	 */
 	public static OWLOntologyManager createManager() {
 		return OWLManager.createOWLOntologyManager();
-	}	
-	
-	/**
-	 * Save a given ontology into a given file.
-	 * 
-	 * @param ontology to be saved
-	 * @param saveFile in which the ontology will be saved
-	 * @param log for printing result and error messages
-	 */
-	public static void saveOntology(OWLOntology ontology, File saveFile,
-			Log log) {
-		
+	}
+
+	public static void saveOntology( OWLOntology ontology, File saveFile, Log log ) {
+		saveOntology( ontology, saveFile, log, true );
+	}
+
+		/**
+		 * Save a given ontology into a given file.
+		 *  @param ontology to be saved
+		 * @param saveFile in which the ontology will be saved
+		 * @param log for printing result and error messages
+		 * @param forceRefresh overwrite files even when present
+		 */
+	public static void saveOntology( OWLOntology ontology, File saveFile,
+	                                 Log log, boolean forceRefresh ) {
+		if ( saveFile.exists() && ! forceRefresh ) {
+			return;
+		}
 		OWLOntologyManager manager = Util.createManager();
 		IRI iri = ontology.getOntologyID().getOntologyIRI().get();
 		log.info("");
@@ -163,6 +251,9 @@ public class Util {
 		log.info(saveFile.getAbsolutePath());
 		log.info("");
 		try {
+			if ( !saveFile.getParentFile().exists() ) {
+				saveFile.getParentFile().mkdirs();
+			}
 			OWLDocumentFormat format = new OWLXMLDocumentFormat();
 			manager.saveOntology(ontology, format, IRI.create(saveFile));
 		} catch (OWLOntologyStorageException e) {
@@ -170,35 +261,6 @@ public class Util {
 		}
 		
 		log.info(saveFile + " has been saved.");
-	}
-	
-	/**
-	 * Checks, if an ontology can be loaded. For this, it loads
-	 * the ontology and returns true, if no exceptions were thrown.
-	 * If there is an exception, it returns false;
-	 * 
-	 * @param iri of the ontology
-	 * @return if can load ontology
-	 */
-	public static boolean canLoadOntology(IRI iri) {
-		try {
-			createManager().loadOntologyFromOntologyDocument(iri);
-			return true;
-		} catch (Exception e) {
-			return false;
-		}
-	}
-	
-	public static boolean canLoadOntologyByIgnoringMissingImports(IRI iri) {
-		try {
-			OWLOntologyManager manager = createManager();
-			manager.setOntologyLoaderConfiguration(manager.getOntologyLoaderConfiguration().setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT));
-			manager.loadOntologyFromOntologyDocument(
-					new IRIDocumentSource(iri));
-			return true;
-		} catch (Exception e) {
-			return false;
-		}
 	}
 	
 	/**
@@ -223,10 +285,9 @@ public class Util {
 		log.info("");
 		log.info("Inferring axioms...");
 		int originalAxiomsCount = ontology.getAxiomCount();
-		new InferredOntologyGenerator(new PelletReasoner(ontology,
-				BufferingMode.BUFFERING)).fillOntology(manager.getOWLDataFactory(), ontology);
-		log.info((ontology.getAxiomCount()
-				- originalAxiomsCount) + " axioms successfully inferred.");
+
+		new InferredOntologyGenerator( new ReasonerFactory().createReasoner( ontology ) ).fillOntology(manager.getOWLDataFactory(), ontology);
+		log.info((ontology.getAxiomCount() - originalAxiomsCount) + " axioms successfully inferred.");
 		log.info("");
 	}
 
@@ -281,7 +342,9 @@ public class Util {
 	
 	/**
 	 * Converts an OWL API OWLOntology to a Jena OntModel.
-	 * @param ontology An OWL API OWLOntology.
+	 * @param owlOntology An OWL API OWLOntology.
+	 * @param withImports Include imports.
+	 * @param log The logger.
 	 * @return The corresponding Jena OntModel.
 	 * @throws OWLOntologyStorageException
 	 * @author Ralph Sch�fermeier
@@ -304,7 +367,7 @@ public class Util {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			owlOntology.getOWLOntologyManager().saveOntology(owlOntology,
-					new RDFXMLDocumentFormat(), baos);
+			                                                 new RDFXMLDocumentFormat(), baos);
 		} catch (OWLOntologyStorageException e) {
 			log.error("Cannot create jena model of the ontology.", e);
 		}
@@ -315,7 +378,122 @@ public class Util {
 				.createOntologyModel(OntModelSpec.OWL_MEM);
 		jenaModel.read(bais, null, "RDF/XML");
 		return jenaModel;
-	}	
-	
-	
+	}
+
+
+	/**
+	 * Aligns the (relative) path of a File to the absolute path of another one
+	 *
+	 * E.g. given /absolute/relative/source.x and relative/target.y,
+	 * this method returns /absolute/relative/target.y
+	 *
+	 * @param absolutePathFile
+	 * @param relativePathFile
+	 * @return an absolute-path file based on the maximum overlap between the absolute and relative paths of the two input argument files
+	 */
+	public static File relativeToFile(File relativePathFile, File absolutePathFile) {
+		if ( (! absolutePathFile.isAbsolute()) || relativePathFile.isAbsolute() ) {
+			return relativePathFile;
+		}
+		return new File(concatMerge(absolutePathFile.getParent(),relativePathFile.getPath()));
+	}
+
+
+	public static String concatMerge(String left, String right) {
+		int max = Math.min(left.length(),right.length());
+		for (int j=max; j>0; j--) {
+			if (left.regionMatches(left.length() - j, right, 0, j)) {
+				return left + right.substring(j, right.length());
+			}
+		}
+		return left + right;
+	}
+
+
+	public static void fetchOntologyDocumentFromURL( String owlFileURL,
+	                                                 String targetFileName,
+	                                                 Log log,
+	                                                 boolean forceRefresh ) throws IOException, OWLOntologyCreationException, OWLOntologyStorageException {
+		URL sourceUrl = null;
+		try {
+			sourceUrl = new URL( owlFileURL );
+		} catch ( MalformedURLException e ) {
+			// not a valid URL, possibly a relative path
+			File f = Util.resolveFile( new File( owlFileURL ) );
+			if ( f.exists() ) {
+				try {
+					sourceUrl = f.toURI().toURL();
+				} catch ( MalformedURLException e1 ) {
+					e1.addSuppressed( e );
+					e1.printStackTrace();
+				}
+			}
+		}
+		if ( sourceUrl != null ) {
+			Optional<OWLOntology> onto = loadOntologyByIgnoringMissingImports( createManager(),
+			                                                                   log,
+			                                                                   new StreamDocumentSource( sourceUrl.openStream() ) );
+			File t = new File( targetFileName );
+			saveOntology( onto.get(), t, log, forceRefresh );
+		}
+	}
+
+	/**
+	 * Creates an ontology manager with an optional catalog
+	 * @param mappingsCatalog
+	 * @return the Ontology Manager
+	 */
+	public static OWLOntologyManager createManager( Optional<XMLCatalog> mappingsCatalog ) {
+		OWLOntologyManager manager = createManager();
+		if ( mappingsCatalog.isPresent() ) {
+			configureMappingsFromCatalog( manager, mappingsCatalog );
+		}
+		return manager;
+	}
+
+	/**
+	 * Uses a catalog to map IRIs.
+	 * Looks up an IRI in the catalog and returns the redirected IRI, if any.
+	 * If no mapping is found, the original IRI is returned
+	 * @param catalog   The catalog containing the IRIs
+	 * @param iri   The IRI to look up in the catalog
+	 * @return  The mapped IRI, if any, or the original IRI
+	 */
+	public static IRI resolveMappings( Optional<XMLCatalog> catalog, IRI iri ) {
+		if ( ! catalog.isPresent() ) {
+			return iri;
+		}
+		XMLCatalogIRIMapper mapper = new XMLCatalogIRIMapper( catalog.get() );
+		IRI mapped = mapper.getDocumentIRI( iri );
+		return mapped != null ? mapped : iri;
+	}
+
+	/**
+	 * Creates a catalog from a URL
+	 * @param mappingsCatalogURL    the URL where the catalog is available
+	 * @return  An XML Catalog object with ontology URL mappings
+	 */
+	public static Optional<XMLCatalog> createCatalog( Optional<String> mappingsCatalogURL ) {
+		XMLCatalog catalog = null;
+		try {
+			if ( mappingsCatalogURL.isPresent() ) {
+				Optional<URL> mappings = resolveURL( mappingsCatalogURL.get() );
+				if ( mappings.isPresent() ) {
+					catalog = CatalogUtilities.parseDocument(mappings.get());
+				}
+			}
+		} catch ( IOException e ) {
+			e.printStackTrace();
+		}
+		return Optional.ofNullable( catalog );
+	}
+
+	/**
+	 * Checks whether a file name ends with one of the known OWL serialization extensions
+	 * @param fileName  The name of the file to be tested
+	 * @return true if the name ends with a known extension (.owl, .rdf(s), .ttl, .ofn )
+	 */
+	public static boolean hasKnwownExtension( String fileName ) {
+		return Arrays.stream(knownExtensions).anyMatch( (ext) -> fileName.endsWith( ext ) );
+	}
 }

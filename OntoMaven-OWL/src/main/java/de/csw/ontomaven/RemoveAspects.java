@@ -2,6 +2,7 @@ package de.csw.ontomaven;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -75,17 +76,24 @@ public class RemoveAspects extends AbstractMojo {
 		// Loading ontology
 		File owlFile = new File(owlDirectory + File.separator + owlFileName);
 		OWLOntologyManager manager = Util.createManager();
-		OWLOntology ontology = Util.loadOntologyFile(manager, log, owlFile);
-		if (ontology == null) return; // Ontology not loaded
+		Optional<OWLOntology> oontology = Util.loadOntologyFile( manager, log, owlFile );
+		if (!oontology.isPresent()) {
+			log.warn("Could not load ontology " + owlFile.getAbsolutePath() );
+			return;
+		}
+		OWLOntology ontology = oontology.get();
+
 
 		// Getting aspects, to check if there are any aspects
 		log.info("Checking aspect names...");
-		AspectManager aspectManager = new AspectManager(manager, aspectsIRI,
-				ontology, null);
+		AspectManager aspectManager = new AspectManager(manager,
+		                                                aspectsIRI,
+		                                                ontology,
+		                                                null);
 		List<String> foundAspectNames = aspectManager.getAllAspectNames();
 		log.info("");
 
-		
+
 		// If there are aspects, remove them
 		if (foundAspectNames.isEmpty()) {
 			log.info("No aspects found.");

@@ -7,3 +7,28 @@ OntoMaven-OWL/test/test_mvnowlreport/target
 OntoMaven-CL/.settings
 OntoMaven-CL/target
 OntoMaven-OWL/.settings
+
+
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+
+# Eclipse Core
+.project
+
+
+## File-based project format:
+*.iws
+
+## Model based project
+*.iml
+
+

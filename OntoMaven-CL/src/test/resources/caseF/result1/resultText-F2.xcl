@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../../xcl2.rnc" type="application/relax-ng-compact-syntax"?>
+<Construct xmlns="http://purl.org/xcl/2.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <include xmlns="http://www.w3.org/2001/XInclude" href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseF%2FmyText-F1%23a" parse="xml"/>
+  <include xmlns="http://www.w3.org/2001/XInclude" href="http://ontomaven.org?uri=http%3A%2F%2Fexample.org%2FcaseF%2FmyText-F1%23b" parse="xml"/>
+  <Atom>
+    <Name>Q</Name>
+    <Name>b</Name>
+  </Atom>
+</Construct>

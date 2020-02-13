@@ -1,27 +1,35 @@
 package de.csw.ontomaven;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-
+import de.csw.ontomaven.util.Util;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.jdom2.Namespace;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
+import org.protege.xmlcatalog.CatalogUtilities;
+import org.protege.xmlcatalog.XMLCatalog;
 import org.semanticweb.owlapi.io.FileDocumentSource;
 import org.semanticweb.owlapi.io.IRIDocumentSource;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLImportsDeclaration;
 import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
-import de.csw.ontomaven.util.Util;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.stream.Collectors;
 
 /**
  * Loads and saves all (also transitiv) imports. The loaded ontologies
@@ -30,6 +38,9 @@ import de.csw.ontomaven.util.Util;
  * local ontologies, if they are imported before.
  * 
  * @goal ImportOntologies
+ * @phase process-resources
+ * @configurator include-project-dependencies
+ * @requiresDependencyResolution compile+runtime
  */
 public class ImportOntologies extends AbstractMojo {
   
@@ -44,7 +55,7 @@ public class ImportOntologies extends AbstractMojo {
 	private String owlDirectory;
 	
 	/**
-	 * Name of the ontology file, which should be in the working directory.
+	 * Name of the ontology file, relative to the working owlDirectory.
 	 * It should be a name like "myOntology.owl".
 	 *
 	 * @parameter 	property="owlFileName"
@@ -53,6 +64,16 @@ public class ImportOntologies extends AbstractMojo {
 	 */
 	private String owlFileName;
 	
+	/**
+	 * URL/relative path where a copy of the ontology file can be retrieved
+	 * If not present, the file will assume to be already available in the owlDirectory
+	 *
+	 * @parameter 	property="owlFileURL"
+	 *
+	 * @optional
+	 */
+	private String owlFileURL;
+
 	/**
 	 * Path of directory, where to save imported ontologies and
 	 * the catalog file. This directory will be created in the
@@ -65,6 +86,15 @@ public class ImportOntologies extends AbstractMojo {
 	private String importDirectory;
 	
 	/**
+	 * Overwrite files when present
+	 *
+	 * @parameter 	property="forceRefresh"
+	 * 				default-value="false"
+	 * @optional
+	 */
+	private boolean forceRefresh = false;
+
+	/**
 	 * Name of the catalog file, where the imports are registered.
 	 * 
 	 * @parameter 	property="catalogFileName"
@@ -72,29 +102,114 @@ public class ImportOntologies extends AbstractMojo {
 	 * @required
 	 */
 	private String catalogFileName;
-    
+
+
+	/**
+	 * URL of the catalog file, where initial mappings are asserted (if any).
+	 *
+	 * @parameter 	property="mappingCatalogURL"
+	 * 				default-value="catalog-v001.xml"
+	 * @optional
+	 */
+	private String mappingCatalogURL;
+
+
+	public String getOwlDirectory() {
+		return owlDirectory;
+	}
+
+	public void setOwlDirectory( String owlDirectory ) {
+		this.owlDirectory = owlDirectory;
+	}
+
+	public String getOwlFileName() {
+		return owlFileName;
+	}
+
+	public void setOwlFileName( String owlFileName ) {
+		this.owlFileName = owlFileName;
+	}
+
+	public String getOwlFileURL() {
+		return owlFileURL;
+	}
+
+	public void setOwlFileURL( String owlFileURL ) {
+		this.owlFileURL = owlFileURL;
+	}
+
+	public String getImportDirectory() {
+		return importDirectory;
+	}
+
+	public void setImportDirectory( String importDirectory ) {
+		this.importDirectory = importDirectory;
+	}
+
+	public boolean isForceRefresh() {
+		return forceRefresh;
+	}
+
+	public void setForceRefresh( boolean forceRefresh ) {
+		this.forceRefresh = forceRefresh;
+	}
+
+	public String getCatalogFileName() {
+		return catalogFileName;
+	}
+
+	public void setCatalogFileName( String catalogFileName ) {
+		this.catalogFileName = catalogFileName;
+	}
+
+	public String getMappingCatalogURL() {
+		return mappingCatalogURL;
+	}
+
+	public void setMappingCatalogURL( String mappingCatalogURL ) {
+		this.mappingCatalogURL = mappingCatalogURL;
+	}
+
 	public void execute() throws MojoExecutionException {
 	
 		Log log = getLog();
 		Util.printHead("Importing ontologies...", log);
 		
 		// Saving directory
-		File importsDir = new File(owlDirectory + File.separator
-				+ importDirectory);
+		File importsDir = new File(owlDirectory + File.separator + importDirectory);
 		importsDir.mkdirs();
 
-		
-		
+
 		// Loading main ontology
-		File owlFile = new File(owlDirectory + File.separator + owlFileName);
-		OWLOntology ontology = Util.loadOntologyByIgnoringMissingImports(
-				null, log, new FileDocumentSource(owlFile));
-		if (ontology == null) return; // ontology not loaded
-		
-		
+		File owlFile = Util.resolveFile(new File(owlDirectory + File.separator + owlFileName));
+		if (! owlFile.exists()) {
+			try {
+				Util.fetchOntologyDocumentFromURL(owlFileURL,owlFile.getAbsolutePath(),log,forceRefresh);
+			} catch ( IOException e ) {
+				e.printStackTrace();
+			} catch ( OWLOntologyCreationException e ) {
+				e.printStackTrace();
+			} catch ( OWLOntologyStorageException e ) {
+				e.printStackTrace();
+			}
+		}
+		Optional<OWLOntology> ontology;
+		Optional<XMLCatalog> mappingsCatalog = Util.createCatalog( Optional.ofNullable( mappingCatalogURL ) );
+		OWLOntologyManager manager = Util.createManager( mappingsCatalog );
+		if ( owlFile.exists() ) {
+			ontology = Util.loadOntologyByIgnoringMissingImports( manager,
+			                                                      log,
+			                                                      new FileDocumentSource( owlFile ) );
+		} else {
+			return;
+		}
+
 		// Creating catalog
-		File catalogFile = new File(owlDirectory + File.separator
-				+ catalogFileName);
+		File catalogFile = Util.relativeToFile( new File(owlDirectory + File.separator + catalogFileName),
+											    owlFile );
+		if (!catalogFile.getParentFile().exists()) {
+			catalogFile.getParentFile().mkdirs();
+		}
 		Catalog catalog = new Catalog(catalogFile, log);
 		
 		
@@ -102,9 +217,8 @@ public class ImportOntologies extends AbstractMojo {
 		// declarations of the main ontology will added to it
 		// In the loop also transitive declarations will be added
 		// While this list is not empty, imports will be downloaded
-		LinkedList<OWLImportsDeclaration> toImport =
-				new LinkedList<OWLImportsDeclaration>();
-		toImport.addAll(ontology.getImportsDeclarations());
+		Queue<OWLImportsDeclaration> toImport = new LinkedList<OWLImportsDeclaration>();
+		toImport.addAll(ontology.get().importsDeclarations().collect( Collectors.toSet()));
 		
 		log.info("");
 		log.info("");
@@ -113,8 +227,8 @@ public class ImportOntologies extends AbstractMojo {
 		int counter = 0; // for logging result
 		while (!toImport.isEmpty()) {
 			
-			OWLImportsDeclaration currentDeclaration = toImport.pop();
-			IRI currentIRI = currentDeclaration.getIRI();
+			OWLImportsDeclaration currentDeclaration = toImport.poll();
+			IRI currentIRI = Util.resolveMappings( mappingsCatalog, currentDeclaration.getIRI() );
 			
 			// some logging
 			counter++;
@@ -122,39 +236,40 @@ public class ImportOntologies extends AbstractMojo {
 			log.info(" Import " + counter + ": " + currentIRI.toString());
 			log.info(".........................................................................");
 
-			// Check if can load ontology, if no -> skip this import declaration
-			if(!Util.canLoadOntologyByIgnoringMissingImports(currentIRI)){
+
+			// Loading the current ontology, it have to be loadable
+			Optional<OWLOntology> currentOntology = Util.loadOntologyByIgnoringMissingImports( manager,
+			                                                                                   log,
+			                                                                                   Optional.of( currentIRI ),
+			                                                                                   new IRIDocumentSource(currentIRI));
+			if (! currentOntology.isPresent()) {
 				log.error("Ontology cannot be loaded.");
 				log.info(".........................................................................");
 				log.info("");
 				log.info("");
 				continue;
 			}
-			
-			// Loading the current ontology, it have to be loadable
-			OWLOntology currentOntology = Util
-					.loadOntologyByIgnoringMissingImports(Util.createManager(),
-							log, new IRIDocumentSource(currentIRI));
 			String currentURL = currentIRI.toString();
 			
 			// If the import is not already existing, add it to the catalog
 			// and save the ontology. We could maybe also 
 			if (!catalog.isImportExisting(currentURL)){
 				String fileName = createFileName(importsDir, currentIRI);
-				catalog.addImport(currentURL, fileName);
-				File saveFile = new File(importsDir.getAbsolutePath() +
-						File.separator + fileName);
-				Util.saveOntology(currentOntology, saveFile, log);
+				catalog.addImport( currentDeclaration.getIRI().toString(),
+				                   fileName );
+				File saveFile = Util.relativeToFile( new File(importsDir.getPath() + File.separator + fileName ),
+													 owlFile );
+				Util.saveOntology(currentOntology.get(), saveFile, log, forceRefresh);
 			} else {
 				log.info("Ontology already existing and won't be imported.");
 			}
 			
 			// Take the imports of the current ontlogy, if they are
 			// not already existing in the IRI or declaration list
-			for (OWLImportsDeclaration decl : currentOntology.getImportsDeclarations()) {
+			currentOntology.get().importsDeclarations().forEach( (decl) -> {
 				if (!toImport.contains(decl) && !catalog.isImportExisting(decl.toString()))
-					toImport.add(decl);
-			}
+					toImport.offer(decl);
+			});
 			
 			// some logging
 			log.info(".........................................................................");
@@ -162,7 +277,7 @@ public class ImportOntologies extends AbstractMojo {
 			log.info("");
 		}
 		
-		log.info("Importig done.");
+		log.info("Importing done.");
 		catalog.saveCatalog();
 		Util.printTail(log);
 	}
@@ -189,8 +304,12 @@ public class ImportOntologies extends AbstractMojo {
 		
 		// if the filename was not empty but it did not have the
 		// ".owl"-extenstion, add this extension to it.
-		if (!fileName.endsWith(".owl"))
-			fileName += ".owl";
+		if (!Util.hasKnwownExtension( fileName )) {
+			if (!fileName.endsWith(".")) {
+				fileName += ".";
+			}
+			fileName += "owl";
+		}
 			
 		// Check if there is a file with the same name
 		boolean isNameValid = true;
@@ -234,6 +353,9 @@ public class ImportOntologies extends AbstractMojo {
 
 /** Represents a xml catalog for mapping url's on local file names */
 class Catalog{
+
+	private static final String CATALOG_NS = "urn:oasis:names:tc:entity:xmlns:xml:catalog";
+
 	private File catalogFile;
 	private Document catalogDocument;
 	private List<ImportDeclaration> imports;
@@ -264,7 +386,7 @@ class Catalog{
 		Document finalCatalog = createEmptyCatalogDocument();
 		
 		for (ImportDeclaration existingImport:imports){
-			Element importElement = new Element("uri");
+			Element importElement = new Element("uri", CATALOG_NS );
 			importElement.setAttribute("id", "User Entered Import Resolution");
 			importElement.setAttribute("name", existingImport.getUrl());
 			importElement.setAttribute("uri", existingImport.getFileName());
@@ -300,7 +422,7 @@ class Catalog{
 	/** Adds a new import declaration to the catalog */
 	public void addImport(String url, String fileName){
 		
-		Element newEntry = new Element("uri");
+		Element newEntry = new Element( "uri", CATALOG_NS);
 		newEntry.setAttribute("id", "User Entered Import Resolution");
 		newEntry.setAttribute("name", url);
 		newEntry.setAttribute("uri", fileName);
@@ -313,7 +435,7 @@ class Catalog{
 	/** Returns a new empyt catalog document with a root */
 	private Document createEmptyCatalogDocument(){
 		Document emptyCatalog = new Document();
-		Element root = new Element("catalog", "urn:oasis:names:tc:entity:xmlns:xml:catalog");
+		Element root = new Element("catalog", CATALOG_NS );
 		root.setAttribute("prefer", "public");
 		emptyCatalog.setRootElement(root);
 		return emptyCatalog;
