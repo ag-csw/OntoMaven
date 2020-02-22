@@ -7,24 +7,19 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.jdom2.Document;
 import org.jdom2.Element;
-import org.jdom2.Namespace;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
-import org.protege.xmlcatalog.CatalogUtilities;
 import org.protege.xmlcatalog.XMLCatalog;
 import org.semanticweb.owlapi.io.FileDocumentSource;
 import org.semanticweb.owlapi.io.IRIDocumentSource;
-import org.semanticweb.owlapi.model.IRI;
-import org.semanticweb.owlapi.model.OWLImportsDeclaration;
-import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
-import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.model.OWLOntologyStorageException;
+import org.semanticweb.owlapi.model.*;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -174,14 +169,16 @@ public class ImportOntologies extends AbstractMojo {
 	
 		Log log = getLog();
 		Util.printHead("Importing ontologies...", log);
-		
+
+		File owlDir = new File(owlDirectory);
+
 		// Saving directory
-		File importsDir = new File(owlDirectory + File.separator + importDirectory);
+		File importsDir = new File(owlDir, importDirectory);
 		importsDir.mkdirs();
 
 
 		// Loading main ontology
-		File owlFile = Util.resolveFile(new File(owlDirectory + File.separator + owlFileName));
+		File owlFile = Util.resolveFile(new File(owlDir, owlFileName));
 		if (! owlFile.exists()) {
 			try {
 				Util.fetchOntologyDocumentFromURL(owlFileURL,owlFile.getAbsolutePath(),log,forceRefresh);
@@ -205,13 +202,13 @@ public class ImportOntologies extends AbstractMojo {
 		}
 
 		// Creating catalog
-		File catalogFile = Util.relativeToFile( new File(owlDirectory + File.separator + catalogFileName),
+		File catalogFile = Util.relativeToFile( new File(owlDir, catalogFileName),
 											    owlFile );
 		if (!catalogFile.getParentFile().exists()) {
 			catalogFile.getParentFile().mkdirs();
 		}
 		Catalog catalog = new Catalog(catalogFile, log);
-		
+
 		
 		// Initialization of the list of the imports. Here the import
 		// declarations of the main ontology will added to it
@@ -255,10 +252,10 @@ public class ImportOntologies extends AbstractMojo {
 			// and save the ontology. We could maybe also 
 			if (!catalog.isImportExisting(currentURL)){
 				String fileName = createFileName(importsDir, currentIRI);
-				catalog.addImport( currentDeclaration.getIRI().toString(),
-				                   fileName );
-				File saveFile = Util.relativeToFile( new File(importsDir.getPath() + File.separator + fileName ),
+				File saveFile = Util.relativeToFile( new File(importsDir, fileName ),
 													 owlFile );
+				catalog.addImport( currentDeclaration.getIRI().toString(),
+						Paths.get(owlDir.toURI()).relativize(Paths.get(saveFile.toURI())).toString());
 				Util.saveOntology(currentOntology.get(), saveFile, log, forceRefresh);
 			} else {
 				log.info("Ontology already existing and won't be imported.");
