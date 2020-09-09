@@ -27,10 +27,10 @@ import java.util.Queue;
 import java.util.stream.Collectors;
 
 /**
- * Loads and saves all (also transitiv) imports. The loaded ontologies
- * will be saved in the specified directory. Every imported ontology
+ * Loads and saves all (also transitive) imports. The loaded ontologies
+ * will be saved in the specified directory (default: target/ontologies). Every imported ontology
  * will also be registered in a catalog. All goals will work with the
- * local ontologies, if they are imported before.
+ * local ontologies, if they were imported before.
  * 
  * @goal ImportOntologies
  * @phase process-resources
@@ -38,6 +38,14 @@ import java.util.stream.Collectors;
  * @requiresDependencyResolution compile+runtime
  */
 public class ImportOntologies extends AbstractMojo {
+
+	/**
+	 * The project output directory (usually target/classes)
+	 *
+	 * @parameter expression="${project.build.outputDirectory}"
+	 * @readonly
+	 */
+	private File outputDirectory;
   
 	/**
 	 * Working directory, where owl files are stored. It should be
@@ -60,8 +68,8 @@ public class ImportOntologies extends AbstractMojo {
 	private String owlFileName;
 	
 	/**
-	 * URL/relative path where a copy of the ontology file can be retrieved
-	 * If not present, the file will assume to be already available in the owlDirectory
+	 * URL/relative path where a copy of the ontology file can be retrieved.
+	 * If not present, the file will be assumed to be already available in the owlDirectory
 	 *
 	 * @parameter 	property="owlFileURL"
 	 *
@@ -177,7 +185,7 @@ public class ImportOntologies extends AbstractMojo {
 		importsDir.mkdirs();
 
 
-		// Loading main ontology
+		// Loading main ontology from source directory
 		File owlFile = Util.resolveFile(new File(owlDir, owlFileName));
 		if (! owlFile.exists()) {
 			try {
@@ -261,7 +269,7 @@ public class ImportOntologies extends AbstractMojo {
 				log.info("Ontology already existing and won't be imported.");
 			}
 			
-			// Take the imports of the current ontlogy, if they are
+			// Take the imports of the current ontlogy, if they
 			// not already existing in the IRI or declaration list
 			currentOntology.get().importsDeclarations().forEach( (decl) -> {
 				if (!toImport.contains(decl) && !catalog.isImportExisting(decl.toString()))
