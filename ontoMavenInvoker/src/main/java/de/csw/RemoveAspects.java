@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 public class RemoveAspects extends OntoMaven {
-    RemoveAspects(){
-        super();
-        //needUserAspects = true;
-    }
+
 
     public void setOwlFileWithoutAspectsName(String owlFileWithoutAspectsName){ configurations.put("owlFileWithoutAspectsName",owlFileWithoutAspectsName); }
     public String getOwlFileWithoutAspectsName(){ return configurations.get("owlFileWithoutAspectsName");}

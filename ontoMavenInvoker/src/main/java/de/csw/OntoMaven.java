@@ -18,7 +18,6 @@ abstract class OntoMaven
     protected boolean printOut;
     protected HashMap<String, String> configurations;
     protected LinkedList<String> userAspects;
-    protected boolean needUserAspects;
 
     public OntoMaven(){
 
@@ -38,8 +37,6 @@ abstract class OntoMaven
         userAspects = new LinkedList<>();
 
         printOut = false;
-
-        needUserAspects = false;
     }
 
     /**
@@ -106,6 +103,16 @@ abstract class OntoMaven
             configuration.addChild(configLine);
         }
 
+        if(userAspects.size()>0){
+            Xpp3Dom uAsp = new Xpp3Dom("userAspects");
+            for(int i = 0; i < userAspects.size(); i++){
+                Xpp3Dom aspect = new Xpp3Dom("aspect");
+                aspect.setValue(userAspects.get(i));
+                uAsp.addChild(aspect);
+            }
+            configuration.addChild(uAsp);
+        }
+
         return configuration;
     }
 
@@ -141,24 +148,10 @@ abstract class OntoMaven
         build.addPlugin( ontoPlugin);
         pom.setBuild( build );
 
-        // write current pom file to string
-        Writer writer = new StringWriter();
+        // write pom file
+        Writer writer = new FileWriter("testPom.xml");
         new MavenXpp3Writer().write(writer, pom );
-        String pomXml = writer.toString();
         writer.close();
-
-        String fpomXml = pomXml;
-
-        // add userAspects to xml string
-        if(needUserAspects) {
-            int lastIndex = pomXml.lastIndexOf("<artifactId>ontomaven</artifactId>");
-            fpomXml = pomXml.substring(0, lastIndex) + generateUserAspects() + pomXml.substring(lastIndex);
-        }
-
-        // write everything to testPom.xml
-        Writer fWriter = new FileWriter("testPom.xml");
-        fWriter.write(fpomXml);
-        fWriter.close();
 
         // set up maven invoker
         InvocationRequest request = new DefaultInvocationRequest();
@@ -167,10 +160,11 @@ abstract class OntoMaven
         request.setGoals( Collections.singletonList( goal ) );
         Invoker invoker = new DefaultInvoker();
 
+        // set input stream Null
+        request.setInputStream(InputStream.nullInputStream());
         // set up output handler if printOut it set
-        if (printOut){
-            InvocationOutputHandler handler = new SystemOutHandler();
-            request.setOutputHandler(handler);
+        if (!printOut){
+            invoker.setOutputHandler(null);
         }
 
         // execute maven goal

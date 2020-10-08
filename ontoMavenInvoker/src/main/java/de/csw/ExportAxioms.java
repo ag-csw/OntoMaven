@@ -7,10 +7,7 @@ import java.util.HashMap;
 
 public class ExportAxioms extends OntoMaven {
 
-    ExportAxioms(){
-        super();
-        //needUserAspects = true;
-    }
+
 
     public void setIfExportInferredAxioms(String ifExportInferredAxioms){ configurations.put("ifExportInferredAxioms",ifExportInferredAxioms); }
     public String getIfExportInferredAxioms(){ return configurations.get("ifExportInferredAxioms");}

@@ -7,10 +7,7 @@ import java.util.HashMap;
 
 public class PrintAspectNames extends OntoMaven {
 
-    PrintAspectNames(){
-        super();
-        //needUserAspects = true;
-    }
+
 
     public void setOwlDirectory(String owlDirectory){ configurations.put("owlDirectory",owlDirectory); }
     public String getOwlDirectory(){ return configurations.get("owlDirectory");}

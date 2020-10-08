@@ -9,10 +9,6 @@ import java.util.Iterator;
 
 public class ApplyAspects extends OntoMaven {
 
-    ApplyAspects(){
-        super();
-        //needUserAspects = true;
-    }
 
     // default value "target/aspectsAppliedOwlDirectory"
     public void setAspectsAppliedOwlDirectory(String dirName){ configurations.put("aspectsAppliedOwlDirectory",dirName); }

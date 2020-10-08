@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 public class InferAxioms extends OntoMaven {
-    InferAxioms(){
-        super();
-        //needUserAspects = true;
-    }
+
 
     public void setIfIncludeOriginalAxioms(String ifIncludeOriginalAxioms){ configurations.put("ifIncludeOriginalAxioms",ifIncludeOriginalAxioms); }
     public String getIfIncludeOriginalAxioms(){ return configurations.get("ifIncludeOriginalAxioms");}
@@ -31,6 +28,8 @@ public class InferAxioms extends OntoMaven {
 
     public void setIfApplyAspects(String ifApplyAspects){ configurations.put("ifApplyAspects",ifApplyAspects); }
     public String getIfApplyAspects(){ return configurations.get("ifApplyAspects");}
+
+    public void setKeepNonAspectAxioms(String keepNonAspectAxioms){configurations.put("keepNonAspectAxioms", keepNonAspectAxioms);}
 
 
 

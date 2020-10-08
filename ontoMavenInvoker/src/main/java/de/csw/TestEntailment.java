@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 public class TestEntailment extends OntoMaven {
-    TestEntailment(){
-        super();
-        //needUserAspects = true;
-    }
+
 
     public void setPremiseOntologyFileName(String premiseOntologyFileName){ configurations.put("premiseOntologyFileName",premiseOntologyFileName); }
     public String getPremiseOntologyFileName(){ return configurations.get("premiseOntologyFileName");}

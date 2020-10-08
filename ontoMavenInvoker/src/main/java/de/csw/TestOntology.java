@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 public class TestOntology extends OntoMaven {
-    TestOntology(){
-        super();
-        //needUserAspects = true;
-    }
+
 
     public void setOwlDirectory(String owlDirectory){ configurations.put("owlDirectory",owlDirectory); }
     public String getOwlDirectory(){ return configurations.get("owlDirectory");}

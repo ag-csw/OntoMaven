@@ -8,10 +8,7 @@ import java.util.HashMap;
 
 public class CreateOntologyGraph extends OntoMaven {
 
-    CreateOntologyGraph(){
-        super();
-        //needUserAspects = true;
-    }
+
 
     public void setGraphDirectory(String graphDirectory){ configurations.put("graphDirectory",graphDirectory); }
     public String getGraphDirectory(){ return configurations.get("graphDirectory");}

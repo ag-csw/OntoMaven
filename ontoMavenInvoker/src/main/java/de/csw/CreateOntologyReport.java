@@ -7,10 +7,7 @@ import java.util.HashMap;
 
 public class CreateOntologyReport extends OntoMaven {
 
-    CreateOntologyReport(){
-        super();
-        //needUserAspects = true;
-    }
+
 
     public void setOntologyReportOutputDirectory(String ontologyReportOutputDirectory){ configurations.put("ontologyReportOutputDirectory",ontologyReportOutputDirectory); }
     public String getOntologyReportOutputDirectory(){ return configurations.get("ontologyReportOutputDirectory");}
