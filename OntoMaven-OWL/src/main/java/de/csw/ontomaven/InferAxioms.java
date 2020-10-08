@@ -78,7 +78,7 @@ public class InferAxioms extends AbstractMojo {
 	/**
 	 * Name of axioms export file.
 	 * @parameter	property="inferredOwlDirectory"
-	 * 				default-value="target/inferredOwlFiles"
+	 * 				default-value="inferredOwlFiles"
 	 */
 	private String inferredOwlDirectory;
 	
@@ -89,8 +89,91 @@ public class InferAxioms extends AbstractMojo {
 	 */
 	private String inferredOwlFileName;
 
+
+	/**
+	 * If true it handles axioms with no aspects as if they would have every aspect, i.e. it will keep axioms that have no aspects.
+	 *
+	 * @parameter property="keepNonAspectAxioms"
+	 * default-value="false"
+	 */
+	private boolean keepNonAspectAxioms;
+
+	public String getOwlDirectory() {
+		return owlDirectory;
+	}
+
+	public void setOwlDirectory(String owlDirectory) {
+		this.owlDirectory = owlDirectory;
+	}
+
+	public String getOwlFileName() {
+		return owlFileName;
+	}
+
+	public void setOwlFileName(String owlFileName) {
+		this.owlFileName = owlFileName;
+	}
+
+	public String getAspectsIRI() {
+		return aspectsIRI;
+	}
+
+	public void setAspectsIRI(String aspectsIRI) {
+		this.aspectsIRI = aspectsIRI;
+	}
+
+	public boolean isIfApplyAspects() {
+		return ifApplyAspects;
+	}
+
+	public void setIfApplyAspects(boolean ifApplyAspects) {
+		this.ifApplyAspects = ifApplyAspects;
+	}
+
+	public String[] getUserAspects() {
+		return userAspects;
+	}
+
+	public void setUserAspects(String[] userAspects) {
+		this.userAspects = userAspects;
+	}
+
+	public boolean isIfIncludeOriginalAxioms() {
+		return ifIncludeOriginalAxioms;
+	}
+
+	public void setIfIncludeOriginalAxioms(boolean ifIncludeOriginalAxioms) {
+		this.ifIncludeOriginalAxioms = ifIncludeOriginalAxioms;
+	}
+
+	public String getInferredOwlDirectory() {
+		return inferredOwlDirectory;
+	}
+
+	public void setInferredOwlDirectory(String inferredOwlDirectory) {
+		this.inferredOwlDirectory = inferredOwlDirectory;
+	}
+
+	public String getInferredOwlFileName() {
+		return inferredOwlFileName;
+	}
+
+	public void setInferredOwlFileName(String inferredOwlFileName) {
+		this.inferredOwlFileName = inferredOwlFileName;
+	}
+
+	public boolean isKeepNonAspectAxioms() {
+		return keepNonAspectAxioms;
+	}
+
+	public void setKeepNonAspectAxioms(boolean keepNonAspectAxioms) {
+		this.keepNonAspectAxioms = keepNonAspectAxioms;
+	}
+
 	/** Tests an ontology regarding syntax and consistency */
 	public void execute() throws MojoExecutionException {
+		owlDirectory = "target/" + owlDirectory;
+		inferredOwlDirectory = "target/" + inferredOwlDirectory;
 
 		Log log = getLog();
 		Util.printHead("Inferring axioms ..", log);
@@ -103,8 +186,10 @@ public class InferAxioms extends AbstractMojo {
 		OWLOntology ontology = oontology.get();
 		
 		// Applying aspects, if the user have sets the boolean true
-		if(ifApplyAspects)
-			Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log);
+		if(ifApplyAspects) {
+			Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log, keepNonAspectAxioms);
+			ontology = manager.ontologies().findFirst().get();
+		}
 		
 		
 		// Preparing export file

@@ -136,6 +136,15 @@ public class CreateOntologyReport extends AbstractMavenReport {
 	private MavenProject project;
 
 
+	/**
+	 * If true it handles axioms with no aspects as if they would have every aspect, i.e. it will keep axioms that have no aspects.
+	 *
+	 * @parameter property="keepNonAspectAxioms"
+	 * default-value="false"
+	 */
+	private boolean keepNonAspectAxioms;
+
+
 	/** Executes the creating of the ontology report. */
 	@Override
 	protected void executeReport(Locale locale) throws MavenReportException {
@@ -155,8 +164,10 @@ public class CreateOntologyReport extends AbstractMavenReport {
 
 
 		// 1.1: Applying aspects, if wanted
-		if(ifApplyAspects)
-			Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log);
+		if(ifApplyAspects) {
+			Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log, keepNonAspectAxioms);
+			ontology = manager.ontologies().findFirst().get();
+		}
 
 
 		// 1.2: Creatin some often needed variables

@@ -48,8 +48,8 @@ public class ImportOntologies extends AbstractMojo {
 	private File outputDirectory;
   
 	/**
-	 * Working directory, where owl files are stored. It should be
-	 * a relative path in the maven project directory.
+	 * Working directory, where the target owl files are stored. It should be
+	 * a relative path in the maven project target directory.
 	 * 
 	 * @parameter 	property="owlDirectory"
 	 * 				default-value="owl"
@@ -58,7 +58,7 @@ public class ImportOntologies extends AbstractMojo {
 	private String owlDirectory;
 	
 	/**
-	 * Name of the ontology file, relative to the working owlDirectory.
+	 * Name that the target ontology file should have, relative to the working owlDirectory.
 	 * It should be a name like "myOntology.owl".
 	 *
 	 * @parameter 	property="owlFileName"
@@ -68,7 +68,7 @@ public class ImportOntologies extends AbstractMojo {
 	private String owlFileName;
 	
 	/**
-	 * URL/relative path where a copy of the ontology file can be retrieved.
+	 * URL/relative path where a copy of the ontology file from the source directory, that should be imported, can be retrieved.
 	 * If not present, the file will be assumed to be already available in the owlDirectory
 	 *
 	 * @parameter 	property="owlFileURL"
@@ -174,7 +174,9 @@ public class ImportOntologies extends AbstractMojo {
 	}
 
 	public void execute() throws MojoExecutionException {
-	
+
+
+		owlDirectory = "target/" + owlDirectory;
 		Log log = getLog();
 		Util.printHead("Importing ontologies...", log);
 
