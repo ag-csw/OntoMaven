@@ -14,6 +14,8 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.io.FileUtils;
+
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -29,7 +31,8 @@ public class ImportTest {
 
 		ImportOntologies mojo = new ImportOntologies();
 		try {
-			File temp = folder.newFolder();
+			File temp = new File("target/testImport");
+			temp.mkdir();
 			assertEquals( 0, temp.listFiles().length );
 
 			URL url = ImportTest.class.getResource( "o1.rdf" );
@@ -39,7 +42,7 @@ public class ImportTest {
 			mojo.setImportDirectory( "." );
 			mojo.setOwlFileName( "o1-local.rdf" );
 			mojo.setMappingCatalogURL( cat.toString() );
-			mojo.setOwlDirectory( temp.getAbsolutePath() );
+			mojo.setOwlDirectory( "testImport" );
 			mojo.setCatalogFileName( "catalog.xml" );
 
 			mojo.execute();
@@ -63,6 +66,8 @@ public class ImportTest {
 
 			assertEquals( o2.toURI().toString(), tgt.toString() );
 
+			FileUtils.deleteDirectory(temp);
+
 		} catch ( Exception e ) {
 			e.printStackTrace();
 			fail(e.getMessage());
@@ -75,7 +80,8 @@ public class ImportTest {
 
 		ImportOntologies mojo = new ImportOntologies();
 		try {
-			File temp = folder.newFolder();
+			File temp = new File("target/testImport");
+			temp.mkdir();
 			assertEquals( 0, temp.listFiles().length );
 
 			URL url = ImportTest.class.getResource( "pizza.owl" );
@@ -84,12 +90,15 @@ public class ImportTest {
 			mojo.setImportDirectory( "." );
 			mojo.setOwlFileName( "pizza.owl" );
 			mojo.setCatalogFileName( "catalog.xml" );
-			mojo.setOwlDirectory( temp.getAbsolutePath() );
+			mojo.setOwlDirectory( "testImport" );
 
 			mojo.execute();
 
 			Set<String> names = Arrays.stream( temp.listFiles() ).map( File::getName ).collect( Collectors.toSet() );
 			assertEquals( 3, names.size() );
+
+
+			FileUtils.deleteDirectory(temp);
 
 		} catch ( Exception e ) {
 			e.printStackTrace();
