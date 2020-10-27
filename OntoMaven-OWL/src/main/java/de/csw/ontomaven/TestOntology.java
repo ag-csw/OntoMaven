@@ -3,31 +3,21 @@ package de.csw.ontomaven;
 import com.clarkparsia.owlapi.explanation.BlackBoxExplanation;
 import com.clarkparsia.owlapi.explanation.HSTExplanationGenerator;
 import de.csw.ontomaven.util.Util;
-import edu.emory.mathcs.backport.java.util.Collections;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.semanticweb.HermiT.Configuration;
-import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.HermiT.ReasonerFactory;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyChangeProgressListener;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.parameters.Imports;
-import org.semanticweb.owlapi.reasoner.ConsoleProgressMonitor;
 import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.OWLReasonerConfiguration;
-import org.semanticweb.owlapi.reasoner.ReasonerProgressMonitor;
-import org.semanticweb.owlapi.util.InferredOntologyGenerator;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Tests an ontology regarding the syntax and consistency. The
@@ -105,6 +95,14 @@ public class TestOntology extends AbstractMojo {
 	 */
 	private List<InferenceType> inferences = new ArrayList( defaultIinferences );
 
+	/**
+	 * If true it handles axioms with no aspects as if they would have every aspect, i.e. it will keep axioms that have no aspects.
+	 *
+	 * @parameter property="keepNonAspectAxioms"
+	 * default-value="false"
+	 */
+	private boolean keepNonAspectAxioms;
+
 
 	private static final List<InferenceType> defaultIinferences = Arrays.asList( InferenceType.CLASS_HIERARCHY,
 	                                                                             InferenceType.CLASS_ASSERTIONS,
@@ -174,6 +172,7 @@ public class TestOntology extends AbstractMojo {
 
 	/** Tests an ontology regarding syntax and consistency */
 	public void execute() throws MojoExecutionException {
+		owlDirectory = "target/" + owlDirectory;
 
 		Log log = getLog();
 		Util.printHead("Testing ontology...", log);
@@ -193,8 +192,10 @@ public class TestOntology extends AbstractMojo {
 		
 		
 		// Applying aspects, if the user have sets the boolean true
-		if(ifApplyAspects)
-			Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log);
+		if(ifApplyAspects) {
+			Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log, keepNonAspectAxioms);
+			ontology = manager.ontologies().findFirst().get();
+		}
 		
 		
 		// Getting inconsistent axioms

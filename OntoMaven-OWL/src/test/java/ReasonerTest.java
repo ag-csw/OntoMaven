@@ -34,7 +34,7 @@ public class ReasonerTest {
 			URL url = ReasonerTest.class.getResource( "pizza.owl" );
 			File f = new File( url.getPath() );
 			mojo.setOwlFileName( f.getName() );
-			mojo.setOwlDirectory( f.getParent() );
+			mojo.setOwlDirectory( "test-classes" );
 
 			mojo.execute();
 
@@ -55,7 +55,7 @@ public class ReasonerTest {
 			URL url = ReasonerTest.class.getResource( "broken.rdf" );
 			File f = new File( url.getPath() );
 			mojo.setOwlFileName( f.getName() );
-			mojo.setOwlDirectory( f.getParent() );
+			mojo.setOwlDirectory( "test-classes" );
 
 			StringBufferLog log = new StringBufferLog();
 			mojo.setLog( log );

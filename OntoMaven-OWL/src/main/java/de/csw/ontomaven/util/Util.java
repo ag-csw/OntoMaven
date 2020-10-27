@@ -1,8 +1,8 @@
 package de.csw.ontomaven.util;
 
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
+import org.apache.jena.ontology.OntModel;
+import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.maven.plugin.logging.Log;
 import org.protege.xmlcatalog.CatalogUtilities;
 import org.protege.xmlcatalog.XMLCatalog;
@@ -319,9 +319,9 @@ public class Util {
 
 	public static void applyAspects(OWLOntologyManager manager,
 			String aspectsIRI, OWLOntology ontology, String[] userAspects,
-			Log log) {
+			Log log, boolean keepNonAspectAxioms) {
 		applyAspects(new AspectManager(manager, aspectsIRI, ontology,
-				userAspects), log, ontology);
+				userAspects, keepNonAspectAxioms), log, ontology);
 	}
 	
 	public static void applyAspects(AspectManager aspectManager, Log log, OWLOntology ontology){
@@ -330,6 +330,7 @@ public class Util {
 		log.info("Entities count: " + ontology.getSignature().size());
 		log.info("Applying aspects...");
 		aspectManager.applyAllAspects();
+		ontology = aspectManager.getManager().ontologies().findFirst().get();
 		log.info("Aspects were applied...");
 		log.info("Removed axioms: " + aspectManager.getRemovedAxiomsCount());
 		log.info("Removed entities: " + aspectManager.getRemovedEntitiesCount());

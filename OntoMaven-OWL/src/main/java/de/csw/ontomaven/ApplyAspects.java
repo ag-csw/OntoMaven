@@ -52,7 +52,7 @@ public class ApplyAspects extends AbstractMojo {
 	 * Name of the result ontology file.
 	 * 
 	 * @parameter	property="aspectsAppliedOwlDirectory"
-	 * 				default-value="target/aspectsAppliedOwlDirectory"
+	 * 				default-value="aspectsAppliedOwlDirectory"
 	 * @required
 	 */
 	private String aspectsAppliedOwlDirectory;
@@ -65,7 +65,67 @@ public class ApplyAspects extends AbstractMojo {
 	 * 
 	 */
 	private String aspectsIRI;
-	
+
+	/**
+	 * If true it handles axioms with no aspects as if they would have every aspect, i.e. it will keep axioms that have no aspects.
+	 *
+	 * @parameter property="keepNonAspectAxioms"
+	 * default-value="false"
+	 */
+	private boolean keepNonAspectAxioms;
+
+	public String getOwlDirectory() {
+		return owlDirectory;
+	}
+
+	public void setOwlDirectory(String owlDirectory) {
+		this.owlDirectory = owlDirectory;
+	}
+
+	public String getOwlFileName() {
+		return owlFileName;
+	}
+
+	public void setOwlFileName(String owlFileName) {
+		this.owlFileName = owlFileName;
+	}
+
+	public String getAspectsAppliedOwlFileName() {
+		return aspectsAppliedOwlFileName;
+	}
+
+	public void setAspectsAppliedOwlFileName(String aspectsAppliedOwlFileName) {
+		this.aspectsAppliedOwlFileName = aspectsAppliedOwlFileName;
+	}
+
+	public String getAspectsAppliedOwlDirectory() {
+		return aspectsAppliedOwlDirectory;
+	}
+
+	public void setAspectsAppliedOwlDirectory(String aspectsAppliedOwlDirectory) {
+		this.aspectsAppliedOwlDirectory = aspectsAppliedOwlDirectory;
+	}
+
+	public String getAspectsIRI() {
+		return aspectsIRI;
+	}
+
+	public void setAspectsIRI(String aspectsIRI) {
+		this.aspectsIRI = aspectsIRI;
+	}
+
+	public String[] getUserAspects() {
+		return userAspects;
+	}
+
+	public void setUserAspects(String[] userAspects) {
+		this.userAspects = userAspects;
+	}
+
+	public void setKeepNonAspectAxioms(boolean keepNonAspectAxioms) {
+		this.keepNonAspectAxioms = keepNonAspectAxioms;
+	}
+
 	/**
 	 * Aspects which are given from the user and will apply
 	 * 
@@ -74,6 +134,9 @@ public class ApplyAspects extends AbstractMojo {
 	private String[] userAspects;
 
 	public void execute() throws MojoExecutionException {
+		owlDirectory = "target/" + owlDirectory;
+		aspectsAppliedOwlDirectory = "target/" + aspectsAppliedOwlDirectory;
+
 		for (String userAspect: userAspects)
 			System.out.println(userAspect);
 		
@@ -90,14 +153,15 @@ public class ApplyAspects extends AbstractMojo {
 
 
 		// Applying aspects
-		Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log);
+		Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log, keepNonAspectAxioms);
 
 		
 		// Writing new ontology file
 		File resultFile = new File(aspectsAppliedOwlDirectory + File.separator
 				+ aspectsAppliedOwlFileName);
-		Util.saveOntology(ontology, resultFile, log);
+		Util.saveOntology(manager.ontologies().findFirst().get(), resultFile, log);
 				
 		Util.printTail(log);
 	}
+
 }
