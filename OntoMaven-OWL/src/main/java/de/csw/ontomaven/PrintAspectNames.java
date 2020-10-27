@@ -50,8 +50,17 @@ public class PrintAspectNames extends AbstractMojo {
 	 */
 	private String aspectsIRI;
 
+	/**
+	 * If true it handles axioms with no aspects as if they would have every aspect, i.e. it will keep axioms that have no aspects.
+	 *
+	 * @parameter property="keepNonAspectAxioms"
+	 * default-value="false"
+	 */
+	private boolean keepNonAspectAxioms;
+
 	/** Executes the printing of the aspect names */
 	public void execute() throws MojoExecutionException {
+		owlDirectory = "target/" + owlDirectory;
 
 		Log log = getLog();
 		Util.printHead("Printing names of aspects...", log);
@@ -70,7 +79,7 @@ public class PrintAspectNames extends AbstractMojo {
 		// Step 3: Getting all aspect names
 		log.info("Collecting aspect names...");
 		List<String> foundAspectNames = new AspectManager(manager, aspectsIRI,
-				ontology, null).getAllAspectNames();
+				ontology, null, keepNonAspectAxioms).getAllAspectNames();
 		log.info("");
 
 		

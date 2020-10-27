@@ -101,11 +101,21 @@ public class TestEntailment extends AbstractMojo {
 	 */
 	private String[] userConclusionAspects;
 
+
+	/**
+	 * If true it handles axioms with no aspects as if they would have every aspect, i.e. it will keep axioms that have no aspects.
+	 *
+	 * @parameter property="keepNonAspectAxioms"
+	 * default-value="false"
+	 */
+	private boolean keepNonAspectAxioms;
+
 	/**
 	 * Tests if all statements of an ontology can be reasoned from the
 	 * statements of another ontology
 	 */
 	public void execute() throws MojoExecutionException {
+		owlDirectory = "target/" + owlDirectory;
 
 		Log log = getLog();
 		Util.printHead("Entailment Test...", log);
@@ -135,7 +145,8 @@ public class TestEntailment extends AbstractMojo {
 		if (ifApplyPremiseAspects) {
 			log.info("PREMISE ONTOLOGY:");
 			Util.applyAspects(premiseManager, aspectsIRI, premiseOntology.get(),
-			                  userPremiseAspects, log);
+			                  userPremiseAspects, log, keepNonAspectAxioms);
+			premiseOntology = Optional.of(premiseManager.ontologies().findFirst().get());
 		}
 
 
@@ -143,7 +154,7 @@ public class TestEntailment extends AbstractMojo {
 		if (ifApplyConclusionAspects) {
 			log.info("CONCLUSION ONTOLOGY:");
 			Util.applyAspects(conclusionManager, aspectsIRI,
-			                  conclusionOntology.get(), userConclusionAspects, log);
+			                  conclusionOntology.get(), userConclusionAspects, log, keepNonAspectAxioms);
 		}
 
 

@@ -96,7 +96,7 @@ public class ExportAxioms extends AbstractMojo {
 	/**
 	 * The directory, where the files for exported axioms 
 	 * @parameter	property="axiomsExportDirectory"
-	 * 				default-value="target/exportedAxioms"
+	 * 				default-value="exportedAxioms"
 	 */
 	private String axiomsExportDirectory;
 	
@@ -107,8 +107,18 @@ public class ExportAxioms extends AbstractMojo {
 	 */
 	private String axiomsExportFileName;
 
+	/**
+	 * If true it handles axioms with no aspects as if they would have every aspect, i.e. it will keep axioms that have no aspects.
+	 *
+	 * @parameter property="keepNonAspectAxioms"
+	 * default-value="false"
+	 */
+	private boolean keepNonAspectAxioms;
+
 	/** Tests an ontology regarding syntax and consistency */
 	public void execute() throws MojoExecutionException {
+		owlDirectory = "target/" + owlDirectory;
+		axiomsExportDirectory = "target/" + axiomsExportDirectory;
 
 		Log log = getLog();
 		Util.printHead("Exporting axioms ..", log);
@@ -127,9 +137,11 @@ public class ExportAxioms extends AbstractMojo {
 
 		// Applying aspects, if the user have sets the boolean true
 		AspectManager aspectManager = new AspectManager(manager, aspectsIRI,
-				ontology, userAspects);
-		if (ifApplyAspects)
+				ontology, userAspects, keepNonAspectAxioms);
+		if (ifApplyAspects) {
 			Util.applyAspects(aspectManager, log, ontology);
+			ontology = manager.ontologies().findFirst().get();
+		}
 		
 		
 		// Preparing export file

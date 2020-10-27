@@ -95,6 +95,14 @@ public class TestOntology extends AbstractMojo {
 	 */
 	private List<InferenceType> inferences = new ArrayList( defaultIinferences );
 
+	/**
+	 * If true it handles axioms with no aspects as if they would have every aspect, i.e. it will keep axioms that have no aspects.
+	 *
+	 * @parameter property="keepNonAspectAxioms"
+	 * default-value="false"
+	 */
+	private boolean keepNonAspectAxioms;
+
 
 	private static final List<InferenceType> defaultIinferences = Arrays.asList( InferenceType.CLASS_HIERARCHY,
 	                                                                             InferenceType.CLASS_ASSERTIONS,
@@ -164,6 +172,7 @@ public class TestOntology extends AbstractMojo {
 
 	/** Tests an ontology regarding syntax and consistency */
 	public void execute() throws MojoExecutionException {
+		owlDirectory = "target/" + owlDirectory;
 
 		Log log = getLog();
 		Util.printHead("Testing ontology...", log);
@@ -183,8 +192,10 @@ public class TestOntology extends AbstractMojo {
 		
 		
 		// Applying aspects, if the user have sets the boolean true
-		if(ifApplyAspects)
-			Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log);
+		if(ifApplyAspects) {
+			Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log, keepNonAspectAxioms);
+			ontology = manager.ontologies().findFirst().get();
+		}
 		
 		
 		// Getting inconsistent axioms

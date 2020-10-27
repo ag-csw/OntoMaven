@@ -34,7 +34,7 @@ public class CreateOntologyGraph extends AbstractMojo {
 	 * a relative path in the maven project directory.
 	 * 
 	 * @parameter 	property="owlDirectory"
-	 * 				default-value=""
+	 * 				default-value="owl"
 	 * @required
 	 */
 	private String owlDirectory;
@@ -54,7 +54,7 @@ public class CreateOntologyGraph extends AbstractMojo {
 	 * the graph file. It should be relative path.
 	 * 
 	 * @parameter property="graphDirectory"
-	 *            default-value="target/site/graph"
+	 *            default-value="site/graph"
 	 */
 	private String graphDirectory;
 	
@@ -95,10 +95,20 @@ public class CreateOntologyGraph extends AbstractMojo {
 	private String[] userAspects;
 
 	/**
+	 * If true it handles axioms with no aspects as if they would have every aspect, i.e. it will keep axioms that have no aspects.
+	 *
+	 * @parameter property="keepNonAspectAxioms"
+	 * default-value="false"
+	 */
+	private boolean keepNonAspectAxioms;
+
+	/**
 	 * Executes the creation of the graph file.
 	 */
 	public void execute() throws MojoExecutionException {
-		
+		owlDirectory = "target/" + owlDirectory;
+		graphDirectory = "target/" + graphDirectory;
+
 		Log log = getLog();
 		Util.printHead("Creating graph...", log);
 		
@@ -114,8 +124,10 @@ public class CreateOntologyGraph extends AbstractMojo {
 
 
 		// Applying aspects
-		if(ifApplyAspects)
-			Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log);
+		if(ifApplyAspects) {
+			Util.applyAspects(manager, aspectsIRI, ontology, userAspects, log, keepNonAspectAxioms);
+			ontology = manager.ontologies().findFirst().get();
+		}
 		
 		
 		// Converting the ontology into the Jena OntModel format because

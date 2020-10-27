@@ -1,20 +1,13 @@
 package de.csw.ontomaven.util;
 
+import java.io.*;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.semanticweb.owlapi.model.AddAxiom;
-import org.semanticweb.owlapi.model.IRI;
-import org.semanticweb.owlapi.model.OWLAnnotation;
-import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
-import org.semanticweb.owlapi.model.OWLAnnotationProperty;
-import org.semanticweb.owlapi.model.OWLAxiom;
-import org.semanticweb.owlapi.model.OWLEntity;
-import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.model.RemoveAxiom;
+import org.semanticweb.owlapi.formats.OWLXMLDocumentFormat;
+import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.util.OWLEntityRemover;
 
 /**
@@ -31,7 +24,15 @@ public class AspectManager {
 	private List<String> aspects;
 	private int originalAxiomsCount;
 	private int originalEntitiesCount;
-	
+	private boolean keepNonAspectAxioms;
+
+	public OWLOntology getOntology() {
+		return ontology;
+	}
+
+	public OWLOntologyManager getManager() {
+		return manager;
+	}
 
 	/**
 	 * Standard constructor for {@link AspectManager}
@@ -41,11 +42,12 @@ public class AspectManager {
 	 * @param userAspects list of aspects the user defined
 	 */
 	public AspectManager(OWLOntologyManager ontologyManager, String aspectsIRI,
-			OWLOntology ontology, String[] userAspects) {
+			OWLOntology ontology, String[] userAspects, boolean keepNonAspectAxioms) {
 		this.manager = ontologyManager;
 		this.ontology = ontology;
 		this.userAspects = userAspects;
 		this.aspectsIRI = aspectsIRI;
+		this.keepNonAspectAxioms = keepNonAspectAxioms;
 				
 		// Defining and filling annotation assertions list
 		annotationAssertions = new LinkedList<OWLAnnotationAssertionAxiom>();
@@ -71,12 +73,15 @@ public class AspectManager {
 	 * by removing the axioms and entities which are not effective because
 	 * of an unvalid aspect.
 	 */
-	public void applyAllAspects(){
+	public void applyAllAspects() {
+
+		// search for annotated axioms
 		for(OWLAxiom axiom: ontology.getAxioms()){
-			if (!isEffectiveAxiom(axiom))
+			if (!isEffectiveAxiom(axiom) && axiom.getAxiomType().getName() != "AnnotationAssertion")
 				manager.removeAxiom(ontology, axiom);
 		}
-		
+
+		//search for Annotation Assertions
 		for (OWLEntity entity: ontology.getSignature()){
 			
 			// Creating entityRemover, which removes an entity and its users
@@ -91,6 +96,21 @@ public class AspectManager {
 			// removing uneffective entities, because the remover removes also
 			// also axioms and other entities which need this entity
 			manager.applyChanges(entityRemover.getChanges());
+		}
+
+		// write ontology to stream and read it, so declarations will be created
+		ByteArrayOutputStream out =  new ByteArrayOutputStream();
+		try {
+			manager.saveOntology(ontology, new OWLXMLDocumentFormat(), out);
+		} catch (OWLOntologyStorageException e) {
+			e.printStackTrace();
+		}
+		ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+		try {
+			manager.removeOntology(ontology);
+			ontology = manager.loadOntologyFromOntologyDocument(in);
+		} catch (OWLOntologyCreationException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -154,7 +174,7 @@ public class AspectManager {
 	 * @return if axiom effective
 	 */
 	private boolean isEffectiveAxiom(OWLAxiom axiom) {
-		boolean isEffektive = true;
+		boolean isEffektive = keepNonAspectAxioms;
 		for (OWLAnnotation annotation : axiom.getAnnotations()) {
 			if (isAspectAnnotation(annotation)) {
 				if (!isEffektiveAspectAnnotation(annotation))

@@ -54,7 +54,7 @@ public class RemoveAspects extends AbstractMojo {
 	 * Name of the result ontology file.
 	 * 
 	 * @parameter	property="owlFilesWithoutAspectsDirectory"
-	 * 				default-value="target/owlFilesWithoutAspects"
+	 * 				default-value="owlFilesWithoutAspects"
 	 * @required
 	 */
 	private String owlFilesWithoutAspectsDirectory;
@@ -68,7 +68,18 @@ public class RemoveAspects extends AbstractMojo {
 	 */
 	private String aspectsIRI;
 
+	/**
+	 * If true it handles axioms with no aspects as if they would have every aspect, i.e. it will keep axioms that have no aspects.
+	 *
+	 * @parameter property="keepNonAspectAxioms"
+	 * default-value="false"
+	 */
+	private boolean keepNonAspectAxioms;
+
 	public void execute() throws MojoExecutionException {
+		owlDirectory = "target/" + owlDirectory;
+		owlFilesWithoutAspectsDirectory = "target/" + owlFilesWithoutAspectsDirectory;
+
 		
 		Log log = getLog();
 		Util.printHead("Removing aspects from ontology...", log);
@@ -89,7 +100,8 @@ public class RemoveAspects extends AbstractMojo {
 		AspectManager aspectManager = new AspectManager(manager,
 		                                                aspectsIRI,
 		                                                ontology,
-		                                                null);
+		                                                null
+														, keepNonAspectAxioms);
 		List<String> foundAspectNames = aspectManager.getAllAspectNames();
 		log.info("");
 
