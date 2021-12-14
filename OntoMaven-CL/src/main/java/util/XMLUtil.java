@@ -74,6 +74,7 @@ public class XMLUtil {
 	public static SAXBuilder createSaxBuilder(XMLParserCapability capability, URI baseURI, URL schemaURL) {
 
 		SAXBuilder saxBuilder = new SAXBuilder();
+		saxBuilder.setExpandEntities(false); // fix https://github.com/advisories/GHSA-2363-cqg2-863c
 
 		switch (capability) {
 			case VALIDATE_AND_RESOLVE_XINCLUDE:
